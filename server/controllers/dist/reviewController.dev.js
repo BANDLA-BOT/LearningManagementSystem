@@ -68,5 +68,53 @@ var reviewController = function reviewController(req, res) {
   }, null, null, [[3, 18]]);
 };
 
-module.exports = reviewController;
+var deleteReview = function deleteReview(req, res) {
+  var _req$params, reviewedUserId, courseId, deletedReview;
+
+  return regeneratorRuntime.async(function deleteReview$(_context2) {
+    while (1) {
+      switch (_context2.prev = _context2.next) {
+        case 0:
+          _context2.prev = 0;
+          _req$params = req.params, reviewedUserId = _req$params.reviewedUserId, courseId = _req$params.courseId;
+          _context2.next = 4;
+          return regeneratorRuntime.awrap(courseModel.findByIdAndUpdate(courseId, {
+            $pull: {
+              reviews: {
+                'reviewBy.userId': reviewedUserId
+              }
+            }
+          }, {
+            "new": true
+          }));
+
+        case 4:
+          deletedReview = _context2.sent;
+          res.json({
+            message: "Review deleted successfully",
+            deletedReview: deletedReview
+          });
+          _context2.next = 11;
+          break;
+
+        case 8:
+          _context2.prev = 8;
+          _context2.t0 = _context2["catch"](0);
+          res.status(500).json({
+            message: "Internal server error",
+            error: _context2.t0.message
+          });
+
+        case 11:
+        case "end":
+          return _context2.stop();
+      }
+    }
+  }, null, null, [[0, 8]]);
+};
+
+module.exports = {
+  reviewController: reviewController,
+  deleteReview: deleteReview
+};
 //# sourceMappingURL=reviewController.dev.js.map

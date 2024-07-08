@@ -17,7 +17,6 @@ var courseSchema = new mongoose.Schema({
     max: 5
   },
   reviews: [{
-    _id: false,
     reviewBy: {
       userId: {
         type: mongoose.Schema.Types.ObjectId,

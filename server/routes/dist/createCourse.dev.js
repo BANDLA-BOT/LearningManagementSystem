@@ -2,9 +2,10 @@
 
 var express = require('express');
 
-var courseCreate = require('../controllers/CreateCourseController.js');
+var _require = require('../controllers/CreateCourseController.js'),
+    createCourse = _require.createCourse;
 
 var router = express.Router();
-router.post('/create', courseCreate);
+router.post('/create', createCourse);
 module.exports = router;
 //# sourceMappingURL=createCourse.dev.js.map

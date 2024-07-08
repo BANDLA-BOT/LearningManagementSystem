@@ -2,11 +2,14 @@
 
 var express = require('express');
 
-var addReview = require('../controllers/reviewController.js');
+var _require = require('../controllers/reviewController.js'),
+    reviewController = _require.reviewController,
+    deleteReview = _require.deleteReview;
 
 var verifyToken = require('../utils/verifyToken.js');
 
 var router = express.Router();
-router.put('/:courseId', verifyToken, addReview);
+router.put('/:courseId', verifyToken, reviewController);
+router["delete"]('/:courseId/:reviewId', verifyToken, deleteReview);
 module.exports = router;
 //# sourceMappingURL=reviewRoute.dev.js.map

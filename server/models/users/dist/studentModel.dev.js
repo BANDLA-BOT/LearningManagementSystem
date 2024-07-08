@@ -1,6 +1,6 @@
 "use strict";
 
-var mongoose = require('mongoose');
+var mongoose = require("mongoose");
 
 var studentSchema = new mongoose.Schema({
   firstname: {
@@ -22,13 +22,25 @@ var studentSchema = new mongoose.Schema({
   },
   profilepic: {
     type: String,
-    "default": ''
+    "default": ""
   },
   enrolled: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'course'
+    coursesAvailable: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "course"
+    },
+    isComplete: {
+      type: Boolean,
+      "default": false
+    }
+  }],
+  completedCourses: [{
+    courses: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "course"
+    }
   }]
 });
-var studentModel = mongoose.model('student', studentSchema);
+var studentModel = mongoose.model("student", studentSchema);
 module.exports = studentModel;
 //# sourceMappingURL=studentModel.dev.js.map
