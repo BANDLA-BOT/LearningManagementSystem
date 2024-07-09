@@ -2,6 +2,19 @@
 
 var mongoose = require("mongoose");
 
+var videoSchema = new mongoose.Schema({
+  title: String,
+  url: String,
+  completed: {
+    type: Boolean,
+    "default": false
+  }
+});
+var sectionSchema = new mongoose.Schema({
+  title: String,
+  thumbnail: String,
+  videos: [videoSchema]
+});
 var courseSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -20,16 +33,14 @@ var courseSchema = new mongoose.Schema({
     reviewBy: {
       userId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'student'
+        ref: "student"
       },
       review: {
         type: String
       }
     }
   }],
-  resources: [{
-    type: String
-  }],
+  resources: [String],
   description: {
     type: String
   },
@@ -37,24 +48,8 @@ var courseSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "instructor"
   },
-  section: [{
-    title: {
-      type: String,
-      required: true
-    },
-    videos: [{
-      title: {
-        type: String
-      },
-      thumbnail: {
-        type: String
-      },
-      videoFile: {
-        type: String
-      }
-    }]
-  }]
+  section: [sectionSchema]
 });
-var coureModel = mongoose.model('course', courseSchema);
+var coureModel = mongoose.model("course", courseSchema);
 module.exports = coureModel;
 //# sourceMappingURL=courseModel.dev.js.map

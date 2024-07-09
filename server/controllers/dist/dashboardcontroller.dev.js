@@ -1,8 +1,8 @@
 "use strict";
 
-var Student = require('../models/users/studentModel.js');
+var Student = require("../models/users/studentModel.js");
 
-var courseModel = require('../models/course/courseModel.js');
+var courseModel = require("../models/course/courseModel.js");
 
 var getProfile = function getProfile(req, res) {
   var id, student, courses;
@@ -16,7 +16,7 @@ var getProfile = function getProfile(req, res) {
           _context.next = 5;
           return regeneratorRuntime.awrap(Student.findById({
             _id: id.id
-          }).select('-password'));
+          }).select("-password"));
 
         case 5:
           student = _context.sent;
@@ -181,7 +181,7 @@ var deleteEnroll = function deleteEnroll(req, res) {
           _context3.prev = 10;
           _context3.t0 = _context3["catch"](0);
           res.status(500).send({
-            message: 'Server error',
+            message: "Server error",
             error: _context3.t0
           });
 
@@ -193,95 +193,27 @@ var deleteEnroll = function deleteEnroll(req, res) {
   }, null, null, [[0, 10]]);
 };
 
-var completedCourses = function completedCourses(req, res) {
-  var userId, student, _completedCourses;
-
-  return regeneratorRuntime.async(function completedCourses$(_context4) {
+var topRanks = function topRanks(req, res) {
+  var students;
+  return regeneratorRuntime.async(function topRanks$(_context4) {
     while (1) {
       switch (_context4.prev = _context4.next) {
         case 0:
           _context4.prev = 0;
-          userId = req.user;
-          _context4.next = 4;
-          return regeneratorRuntime.awrap(Student.findById({
-            _id: userId.id
-          }));
-
-        case 4:
-          student = _context4.sent;
-
-          if (student) {
-            _context4.next = 7;
-            break;
-          }
-
-          return _context4.abrupt("return", res.status(404).send({
-            message: 'Student not found'
-          }));
-
-        case 7:
-          _completedCourses = student.enrolled.filter(function (course) {
-            return course.isComplete;
-          }).map(function (course) {
-            return {
-              courses: course.coursesAvailable
-            };
-          });
-          _context4.next = 10;
-          return regeneratorRuntime.awrap(Student.updateOne({
-            _id: userId.id
-          }, {
-            $addToSet: {
-              completedCourses: {
-                $each: _completedCourses
-              }
-            }
-          }));
-
-        case 10:
-          res.status(200).json({
-            message: 'Completed courses updated successfully'
-          });
-          _context4.next = 16;
-          break;
-
-        case 13:
-          _context4.prev = 13;
-          _context4.t0 = _context4["catch"](0);
-          res.status(500).json({
-            message: 'Server error',
-            error: _context4.t0
-          });
-
-        case 16:
-        case "end":
-          return _context4.stop();
-      }
-    }
-  }, null, null, [[0, 13]]);
-};
-
-var topRanks = function topRanks(req, res) {
-  var students;
-  return regeneratorRuntime.async(function topRanks$(_context5) {
-    while (1) {
-      switch (_context5.prev = _context5.next) {
-        case 0:
-          _context5.prev = 0;
-          _context5.next = 3;
+          _context4.next = 3;
           return regeneratorRuntime.awrap(Student.aggregate([{
             $match: {
-              'enrolled.isComplete': true
+              "enrolled.isComplete": true
             }
           }, {
             $addFields: {
               Count: {
                 $size: {
                   $filter: {
-                    input: '$enrolled',
-                    as: 'enrolled',
+                    input: "$enrolled",
+                    as: "enrolled",
                     cond: {
-                      $eq: ['$$enrolled.isComplete', true]
+                      $eq: ["$$enrolled.isComplete", true]
                     }
                   }
                 }
@@ -294,28 +226,29 @@ var topRanks = function topRanks(req, res) {
           }, {
             $project: {
               firstname: 1,
-              lastname: 1
+              lastname: 1,
+              Count: 1
             }
           }]));
 
         case 3:
-          students = _context5.sent;
+          students = _context4.sent;
           res.status(200).json({
             rankings: students
           });
-          _context5.next = 10;
+          _context4.next = 10;
           break;
 
         case 7:
-          _context5.prev = 7;
-          _context5.t0 = _context5["catch"](0);
+          _context4.prev = 7;
+          _context4.t0 = _context4["catch"](0);
           res.status(500).json({
             message: "Internal server error"
           });
 
         case 10:
         case "end":
-          return _context5.stop();
+          return _context4.stop();
       }
     }
   }, null, null, [[0, 7]]);
@@ -323,20 +256,20 @@ var topRanks = function topRanks(req, res) {
 
 var markAsComplete = function markAsComplete(req, res) {
   var courseId, userId, student;
-  return regeneratorRuntime.async(function markAsComplete$(_context6) {
+  return regeneratorRuntime.async(function markAsComplete$(_context5) {
     while (1) {
-      switch (_context6.prev = _context6.next) {
+      switch (_context5.prev = _context5.next) {
         case 0:
-          _context6.prev = 0;
+          _context5.prev = 0;
           courseId = req.params.courseId;
           userId = req.user;
-          _context6.next = 5;
+          _context5.next = 5;
           return regeneratorRuntime.awrap(Student.findOneAndUpdate({
             _id: userId.id,
-            'enrolled.coursesAvailable': courseId
+            "enrolled.coursesAvailable": courseId
           }, {
             $set: {
-              'enrolled.$.isComplete': true
+              "enrolled.$.isComplete": true
             },
             $addToSet: {
               completedCourses: {
@@ -348,14 +281,14 @@ var markAsComplete = function markAsComplete(req, res) {
           }));
 
         case 5:
-          student = _context6.sent;
+          student = _context5.sent;
 
           if (student) {
-            _context6.next = 8;
+            _context5.next = 8;
             break;
           }
 
-          return _context6.abrupt("return", res.json({
+          return _context5.abrupt("return", res.json({
             error: "student not found"
           }));
 
@@ -363,30 +296,193 @@ var markAsComplete = function markAsComplete(req, res) {
           res.json({
             message: student
           });
-          _context6.next = 14;
+          _context5.next = 14;
           break;
 
         case 11:
-          _context6.prev = 11;
+          _context5.prev = 11;
+          _context5.t0 = _context5["catch"](0);
+          res.json({
+            message: _context5.t0.message
+          });
+
+        case 14:
+        case "end":
+          return _context5.stop();
+      }
+    }
+  }, null, null, [[0, 11]]);
+};
+
+var progressController = function progressController(req, res) {
+  var userId, student, totalCourses, completedCourses, coursesPercentage, coursesData;
+  return regeneratorRuntime.async(function progressController$(_context6) {
+    while (1) {
+      switch (_context6.prev = _context6.next) {
+        case 0:
+          _context6.prev = 0;
+          userId = req.user.id;
+          _context6.next = 4;
+          return regeneratorRuntime.awrap(Student.findById(userId));
+
+        case 4:
+          student = _context6.sent;
+
+          if (student) {
+            _context6.next = 7;
+            break;
+          }
+
+          return _context6.abrupt("return", res.status(404).json({
+            message: "Student not found"
+          }));
+
+        case 7:
+          totalCourses = student.enrolled.length;
+          completedCourses = student.enrolled.filter(function (course) {
+            return course.isComplete;
+          }).length;
+          coursesPercentage = completedCourses / totalCourses * 100;
+          coursesData = {
+            totalCourses: totalCourses,
+            completedCourses: completedCourses,
+            coursesPercentage: coursesPercentage
+          };
+          res.status(200).json({
+            message: "Progress report",
+            Progress: coursesData
+          });
+          _context6.next = 17;
+          break;
+
+        case 14:
+          _context6.prev = 14;
           _context6.t0 = _context6["catch"](0);
           res.json({
             message: _context6.t0.message
           });
 
-        case 14:
+        case 17:
         case "end":
           return _context6.stop();
       }
     }
-  }, null, null, [[0, 11]]);
+  }, null, null, [[0, 14]]);
+};
+
+var courseProgress = function courseProgress(req, res) {
+  var studentId, student, results;
+  return regeneratorRuntime.async(function courseProgress$(_context8) {
+    while (1) {
+      switch (_context8.prev = _context8.next) {
+        case 0:
+          _context8.prev = 0;
+          studentId = req.user.id;
+          _context8.next = 4;
+          return regeneratorRuntime.awrap(Student.findById(studentId).populate("enrolled"));
+
+        case 4:
+          student = _context8.sent;
+
+          if (student) {
+            _context8.next = 7;
+            break;
+          }
+
+          return _context8.abrupt("return", res.status(404).json({
+            message: "Student not found"
+          }));
+
+        case 7:
+          _context8.next = 9;
+          return regeneratorRuntime.awrap(Promise.all(student.enrolled.map(function _callee(course) {
+            var result;
+            return regeneratorRuntime.async(function _callee$(_context7) {
+              while (1) {
+                switch (_context7.prev = _context7.next) {
+                  case 0:
+                    _context7.next = 2;
+                    return regeneratorRuntime.awrap(courseModel.aggregate([{
+                      $match: {
+                        _id: course.coursesAvailable
+                      }
+                    }, {
+                      $unwind: "$section"
+                    }, {
+                      $unwind: "$section.videos"
+                    }, {
+                      $group: {
+                        _id: null,
+                        totalVideos: {
+                          $sum: 1
+                        },
+                        completedVideos: {
+                          $sum: {
+                            $cond: ["$section.videos.completed", 1, 0]
+                          }
+                        }
+                      }
+                    }, {
+                      $project: {
+                        _id: 0,
+                        totalVideos: 1,
+                        completedVideos: 1,
+                        completedPercentage: {
+                          $cond: [{
+                            $eq: ['$totalVideos', 0]
+                          }, 0, {
+                            $multiply: [{
+                              $divide: ['$completedVideos', '$totalVideos']
+                            }, 100]
+                          }]
+                        }
+                      }
+                    }]));
+
+                  case 2:
+                    result = _context7.sent;
+                    return _context7.abrupt("return", {
+                      course: course,
+                      progress: result[0]
+                    });
+
+                  case 4:
+                  case "end":
+                    return _context7.stop();
+                }
+              }
+            });
+          })));
+
+        case 9:
+          results = _context8.sent;
+          res.json(results);
+          _context8.next = 16;
+          break;
+
+        case 13:
+          _context8.prev = 13;
+          _context8.t0 = _context8["catch"](0);
+          res.status(500).json({
+            message: "Internal server error",
+            error: _context8.t0.message
+          });
+
+        case 16:
+        case "end":
+          return _context8.stop();
+      }
+    }
+  }, null, null, [[0, 13]]);
 };
 
 module.exports = {
   getProfile: getProfile,
   enrollCourse: enrollCourse,
   deleteEnroll: deleteEnroll,
-  completedCourses: completedCourses,
   topRanks: topRanks,
-  markAsComplete: markAsComplete
+  markAsComplete: markAsComplete,
+  progressController: progressController,
+  courseProgress: courseProgress
 };
-//# sourceMappingURL=dashboardController.dev.js.map
+//# sourceMappingURL=dashboardcontroller.dev.js.map

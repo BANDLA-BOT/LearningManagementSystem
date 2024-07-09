@@ -1,5 +1,16 @@
 const mongoose = require("mongoose");
 
+const videoSchema = new mongoose.Schema({
+  title: String,
+  url: String,
+  completed: { type: Boolean, default: false },
+});
+
+const sectionSchema = new mongoose.Schema({
+  title: String,
+  thumbnail: String,
+  videos: [videoSchema],
+});
 const courseSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -16,52 +27,27 @@ const courseSchema = new mongoose.Schema({
   },
   reviews: [
     {
-      reviewBy:{
-        userId:{
-          type:mongoose.Schema.Types.ObjectId,
-          ref:'student'
+      reviewBy: {
+        userId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "student",
         },
-        review:{
-          type:String,
-        }
-      }
-    }
-  ],
-  resources: [
-    {
-      type: String,
+        review: {
+          type: String,
+        },
+      },
     },
   ],
+  resources: [String],
   description: {
     type: String,
   },
   instructor: {
-    type:mongoose.Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: "instructor",
   },
-  section: [
-    {
-      title: {
-        type: String,
-        required: true,
-      },
-      videos: [
-        {
-          title: {
-            type: String,
-          },
-          thumbnail: {
-            type: String,
-          },
-          videoFile: {
-            type: String,
-          },
-        },
-      ],
-    },
-  ],
+  section: [sectionSchema],
 });
 
-
-const coureModel = mongoose.model('course', courseSchema)
-module.exports = coureModel
+const coureModel = mongoose.model("course", courseSchema);
+module.exports = coureModel;
