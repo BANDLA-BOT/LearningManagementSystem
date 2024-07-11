@@ -21,7 +21,7 @@ var getProfile = function getProfile(req, res) {
         case 5:
           student = _context.sent;
           _context.next = 8;
-          return regeneratorRuntime.awrap(courseModel.find().limit(4));
+          return regeneratorRuntime.awrap(courseModel.find().limit(61));
 
         case 8:
           courses = _context.sent;
@@ -474,6 +474,157 @@ var courseProgress = function courseProgress(req, res) {
       }
     }
   }, null, null, [[0, 13]]);
+}; //filtering Records 
+
+
+var filter = function filter(req, res) {
+  var query, paidCourses, freeCourses;
+  return regeneratorRuntime.async(function filter$(_context9) {
+    while (1) {
+      switch (_context9.prev = _context9.next) {
+        case 0:
+          _context9.prev = 0;
+          query = req.query.f;
+          console.log(query);
+
+          if (!(query.toLowerCase() === 'paid')) {
+            _context9.next = 10;
+            break;
+          }
+
+          _context9.next = 6;
+          return regeneratorRuntime.awrap(courseModel.find().where('price').gt(0));
+
+        case 6:
+          paidCourses = _context9.sent;
+          return _context9.abrupt("return", res.status(200).json({
+            message: "Paid courses",
+            paidCourses: paidCourses
+          }));
+
+        case 10:
+          if (!(query.toLowerCase() === 'free')) {
+            _context9.next = 15;
+            break;
+          }
+
+          _context9.next = 13;
+          return regeneratorRuntime.awrap(courseModel.find().where('price').eq(0));
+
+        case 13:
+          freeCourses = _context9.sent;
+          return _context9.abrupt("return", res.status(200).json({
+            message: "free courses",
+            freeCourses: freeCourses
+          }));
+
+        case 15:
+          res.json({
+            message: "No courses available based on Query"
+          });
+          _context9.next = 21;
+          break;
+
+        case 18:
+          _context9.prev = 18;
+          _context9.t0 = _context9["catch"](0);
+          res.status(500).json({
+            message: "Internal server error",
+            Error: _context9.t0.message
+          });
+
+        case 21:
+        case "end":
+          return _context9.stop();
+      }
+    }
+  }, null, null, [[0, 18]]);
+};
+
+var sorting = function sorting(req, res) {
+  var query, courses, _courses, _courses2;
+
+  return regeneratorRuntime.async(function sorting$(_context10) {
+    while (1) {
+      switch (_context10.prev = _context10.next) {
+        case 0:
+          _context10.prev = 0;
+          query = req.query.sort;
+
+          if (!(query.toLowerCase() === "asc")) {
+            _context10.next = 9;
+            break;
+          }
+
+          _context10.next = 5;
+          return regeneratorRuntime.awrap(courseModel.find().sort({
+            title: 1
+          }));
+
+        case 5:
+          courses = _context10.sent;
+          return _context10.abrupt("return", res.json({
+            message: "Ascending order",
+            course: courses
+          }));
+
+        case 9:
+          if (!(query.toLowerCase() === "desc")) {
+            _context10.next = 16;
+            break;
+          }
+
+          _context10.next = 12;
+          return regeneratorRuntime.awrap(courseModel.find().sort({
+            title: -1
+          }));
+
+        case 12:
+          _courses = _context10.sent;
+          return _context10.abrupt("return", res.json({
+            message: "Descending order",
+            course: _courses
+          }));
+
+        case 16:
+          if (!(query.toLowerCase() === "rating")) {
+            _context10.next = 21;
+            break;
+          }
+
+          _context10.next = 19;
+          return regeneratorRuntime.awrap(courseModel.find().sort({
+            rating: -1
+          }));
+
+        case 19:
+          _courses2 = _context10.sent;
+          return _context10.abrupt("return", res.json({
+            message: "Rating order",
+            course: _courses2
+          }));
+
+        case 21:
+          res.json({
+            message: "No Sorting chosen"
+          });
+          _context10.next = 27;
+          break;
+
+        case 24:
+          _context10.prev = 24;
+          _context10.t0 = _context10["catch"](0);
+          res.status(500).json({
+            message: "Internal server error",
+            Error: _context10.t0.message
+          });
+
+        case 27:
+        case "end":
+          return _context10.stop();
+      }
+    }
+  }, null, null, [[0, 24]]);
 };
 
 module.exports = {
@@ -483,6 +634,9 @@ module.exports = {
   topRanks: topRanks,
   markAsComplete: markAsComplete,
   progressController: progressController,
-  courseProgress: courseProgress
+  courseProgress: courseProgress,
+  //filters and sortings
+  filter: filter,
+  sorting: sorting
 };
-//# sourceMappingURL=dashboardcontroller.dev.js.map
+//# sourceMappingURL=dashboardController.dev.js.map

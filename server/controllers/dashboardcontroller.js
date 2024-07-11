@@ -6,7 +6,9 @@ const getProfile = async (req, res) => {
   console.log(id);
   try {
     const student = await Student.findById({ _id: id.id }).select("-password");
-    const courses = await courseModel.find().limit(4);
+    const courses = await courseModel.find().limit(61
+
+    );
     if (!student) {
       return res.json({ message: "No student found " });
     }
@@ -207,13 +209,56 @@ const courseProgress = async (req, res) => {
   }
 };
 
+
+//filtering Records 
+
+const filter = async(req,res)=>{
+  try {
+    const query = req.query.f
+    console.log(query)
+    if(query.toLowerCase() === 'paid'){
+      const paidCourses = await courseModel.find().where('price').gt(0);
+      return res.status(200).json({message:"Paid courses", paidCourses:paidCourses})
+    }else if(query.toLowerCase() === 'free'){
+      const freeCourses = await courseModel.find().where('price').eq(0)
+      return res.status(200).json({message:"free courses", freeCourses:freeCourses})
+    }
+    res.json({message:"No courses available based on Query"})
+  } catch (error) {
+    res.status(500).json({message:"Internal server error", Error:error.message})
+  }
+}
+
+const sorting = async(req,res)=>{
+  try {
+    const query = req.query.sort
+    if(query.toLowerCase() === "asc"){
+      const courses = await courseModel.find().sort({title:1})
+      return res.json({message:"Ascending order", course:courses})
+    }
+    else if(query.toLowerCase() === "desc"){
+      const courses = await courseModel.find().sort({title:-1})
+      return res.json({message:"Descending order", course:courses})
+    }
+    else if(query.toLowerCase() === "rating"){
+      const courses = await courseModel.find().sort({rating:-1})
+      return res.json({message:"Rating order", course:courses})
+    }
+    res.json({message:"No Sorting chosen"})
+  } catch (error) {
+    res.status(500).json({message:"Internal server error", Error:error.message})
+  }
+}
+
 module.exports = {
   getProfile,
   enrollCourse,
   deleteEnroll,
-
   topRanks,
   markAsComplete,
   progressController,
   courseProgress,
+  //filters and sortings
+  filter,
+  sorting
 };
