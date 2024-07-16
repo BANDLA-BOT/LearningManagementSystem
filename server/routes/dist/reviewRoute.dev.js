@@ -2,7 +2,7 @@
 
 var express = require('express');
 
-var _require = require('../controllers/reviewController.js'),
+var _require = require('../controllers/student/reviewController.js'),
     reviewController = _require.reviewController,
     deleteReview = _require.deleteReview;
 

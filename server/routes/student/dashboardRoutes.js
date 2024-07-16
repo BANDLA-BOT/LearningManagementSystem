@@ -1,5 +1,5 @@
 const express = require("express");
-const verifyToken = require("../utils/verifyToken.js");
+const verifyToken = require("../../utils/verifyToken.js");
 const {
   getProfile,
   enrollCourse,
@@ -11,7 +11,7 @@ const {
   courseProgress,
   filter,
   sorting,
-} = require("../controllers/dashboardController.js");
+} = require('../../controllers/student/dashboardcontroller.js');
 const router = express.Router();
 
 router.get("/profile", verifyToken, getProfile);

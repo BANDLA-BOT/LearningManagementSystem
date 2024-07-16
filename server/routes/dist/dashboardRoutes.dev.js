@@ -4,7 +4,7 @@ var express = require("express");
 
 var verifyToken = require("../utils/verifyToken.js");
 
-var _require = require("../controllers/dashboardController.js"),
+var _require = require('../controllers/student/dashboardcontroller.js'),
     getProfile = _require.getProfile,
     enrollCourse = _require.enrollCourse,
     deleteEnroll = _require.deleteEnroll,

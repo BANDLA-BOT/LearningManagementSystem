@@ -2,7 +2,7 @@
 
 var express = require('express');
 
-var _require = require('../controllers/CreateCourseController.js'),
+var _require = require('../controllers/student/CreateCourseController.js'),
     createCourse = _require.createCourse;
 
 var router = express.Router();

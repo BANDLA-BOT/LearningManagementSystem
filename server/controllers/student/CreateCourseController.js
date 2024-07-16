@@ -1,4 +1,4 @@
-const CourseModel = require('../models/course/courseModel.js')
+const CourseModel = require('../../models/course/courseModel.js')
 const multer = require('multer')
 const path = require('path')
 

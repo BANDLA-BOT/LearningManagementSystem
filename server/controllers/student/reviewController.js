@@ -1,5 +1,5 @@
-const courseModel = require('../models/course/courseModel.js')
-const studentModel = require('../models/users/studentModel.js')
+const courseModel = require('../../models/course/courseModel')
+const studentModel = require('../../models/users/studentModel.js')
 
 const reviewController  = async(req,res)=>{
     const { courseId } = req.params

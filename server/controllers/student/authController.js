@@ -1,4 +1,4 @@
-const Student = require('../models/users/studentModel.js')
+const Student = require('../../models/users/studentModel.js')
 const jwt = require('jsonwebtoken')
 require('dotenv').config()
 

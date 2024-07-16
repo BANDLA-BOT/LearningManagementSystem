@@ -2,7 +2,7 @@
 
 var express = require('express');
 
-var _require = require('../controllers/authController.js'),
+var _require = require('../controllers/student/authController.js'),
     register = _require.register,
     login = _require.login;
 

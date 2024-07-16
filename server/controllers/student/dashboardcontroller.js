@@ -1,5 +1,5 @@
-const Student = require("../models/users/studentModel.js");
-const courseModel = require("../models/course/courseModel.js");
+const Student = require('../../models/users/studentModel.js')
+const courseModel = require('../../models/course/courseModel.js')
 
 const getProfile = async (req, res) => {
   const id = req.user;
@@ -258,7 +258,6 @@ module.exports = {
   markAsComplete,
   progressController,
   courseProgress,
-  //filters and sortings
   filter,
   sorting
 };
