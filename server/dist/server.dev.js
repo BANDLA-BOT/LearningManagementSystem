@@ -2,7 +2,13 @@
 
 var express = require("express");
 
-var DB = require("./utils/db.js"); //Student imports 
+var DB = require("./utils/db.js");
+
+var bodyParser = require('body-parser');
+
+var path = require('path');
+
+var cookieParser = require('cookie-parser'); //Student imports 
 
 
 var authRoutes = require("./routes/student/authRoutes.js");
@@ -27,7 +33,10 @@ var app = express(); //DB
 DB; //middlewares
 
 app.use(express.json());
-app.use(cors()); //student API's
+app.use(cors());
+app.use(cookieParser());
+app.use(bodyParser.json());
+app.use('/uploads', express["static"]('uploads')); //student API's
 
 app.use("/api/student/auth", authRoutes);
 app.use("/api/student/dashboard", dashboardRoutes);

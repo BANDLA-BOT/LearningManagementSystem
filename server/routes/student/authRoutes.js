@@ -1,6 +1,22 @@
 const express = require('express');
-const { register, login } = require('../../controllers/student/authController.js')
+const multer = require('multer')
+const { register, login, forgotPassword, sendOtp } = require('../../controllers/student/authController.js')
 const router = express.Router()
-router.post('/register', register);
+const storage = multer.diskStorage({
+    destination:(req,file,cb)=>{
+        cb(null, 'uploads')
+    },
+    filename:(req,file,cb)=>{
+        cb(null,`${Date.now()}-${file.originalname}`)
+    }
+})
+const upload = multer({
+    storage:storage
+})
+router.post('/register', upload.single('profile'), register);
 router.post('/login', login);
+router.put('/sendotp', sendOtp)
+router.put('/forgotpassword',forgotPassword)
+
+
 module.exports = router 

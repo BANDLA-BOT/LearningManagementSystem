@@ -1,5 +1,6 @@
 const Student = require('../../models/users/studentModel.js')
-const courseModel = require('../../models/course/courseModel.js')
+const courseModel = require('../../models/course/courseModel.js');
+
 
 const getProfile = async (req, res) => {
   const id = req.user;
@@ -23,7 +24,21 @@ const getProfile = async (req, res) => {
     console.log(student);
   } catch (error) {}
 };
-
+const editProfile = async(req,res)=>{
+  try {
+    const {email, firstname, lastname} = req.body
+    const userId = req.user.id
+    console.log(userId)
+    const student = await Student.updateOne(
+      {_id:userId},
+      {$set:{firstname:firstname, lastname:lastname, email:email}}
+    );
+    res.status(200).json({message:"Profile updated successfuly",})
+    
+  } catch (error) {
+    res.status(500).json({message:"Internal server error", Error:error.message})
+  }
+}
 const enrollCourse = async (req, res) => {
   const { courseId } = req.params;
   const userId = req.user;
@@ -106,27 +121,68 @@ const topRanks = async (req, res) => {
   }
 };
 
+const markVideoAsComplete = async(req,res)=>{
+  try {
+     const {courseId, videoArrId, videoId} = req.params
+     const course = await courseModel.findById(courseId)
+     if(!course){
+      return res.status(404).json({message:"Course not found"})
+     }
+     const videosArr = course.section.id(videoArrId)
+     const video = videosArr.videos.id(videoId)
+     video.completed = true
+     await course.save()
+     if(video.completed){
+       return res.json({message:"You have completed the video, move to next"})
+      }
+    //  res.json(video)
+  } catch (error) {
+    res.status(500).json({message:"Internal server error", Error:error.message})
+  }
+}
+
 const markAsComplete = async (req, res) => {
   try {
     const { courseId } = req.params;
     const userId = req.user;
-    const student = await Student.findOneAndUpdate(
-      { _id: userId.id, "enrolled.coursesAvailable": courseId },
-      {
-        $set: { "enrolled.$.isComplete": true },
-        $addToSet: { completedCourses: { courses: courseId } },
-      },
-      { new: true }
-    );
-    if (!student) {
-      return res.json({ error: "student not found" });
+    const course = await courseModel.findById(courseId)
+    const videosArr = course.section
+    const videos = videosArr[0].videos
+    let trueCount = 0;
+    for(let i=0; i<=videos.length; i++){
+      if(videos[i].completed){
+          trueCount++
+          console.log(videos[i])
+          if(videos.length === trueCount){
+            const student = await Student.findOneAndUpdate(
+              { _id: userId.id, "enrolled.coursesAvailable": courseId },
+              {
+                $set: { "enrolled.$.isComplete": true },
+                $addToSet: { completedCourses: { courses: courseId } },
+              },
+              { new: true }
+            );
+            return res.json({message:"Successfully completed Course", Data:student})
+          }
+      }
+      else{
+        return res.json({message:"You have to complete all the videos"})
+      }
     }
-    res.json({ message: student });
   } catch (error) {
     res.json({ message: error.message });
   }
 };
 
+const completedCourses = async(req,res)=>{
+  try {
+    const userId = req.user
+    const completedList = await Student.findById(userId.id)
+    res.json(completedList.completedCourses)
+  } catch (error) {
+    res.status(500).json({message:"Internal server error", error:error.message})
+  }
+}
 const progressController = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -256,8 +312,11 @@ module.exports = {
   deleteEnroll,
   topRanks,
   markAsComplete,
+  completedCourses,
   progressController,
   courseProgress,
   filter,
-  sorting
+  sorting,
+  markVideoAsComplete,
+  editProfile
 };

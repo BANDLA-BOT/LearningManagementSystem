@@ -1,6 +1,8 @@
 const express = require("express");
 const DB = require("./utils/db.js");
-
+const bodyParser = require('body-parser')
+const path = require('path')
+const cookieParser = require('cookie-parser')
 //Student imports 
 const authRoutes = require("./routes/student/authRoutes.js");
 const dashboardRoutes = require("./routes/student/dashboardRoutes.js");
@@ -22,6 +24,9 @@ DB;
 //middlewares
 app.use(express.json());
 app.use(cors());
+app.use(cookieParser())
+app.use(bodyParser.json())
+app.use('/uploads', express.static('uploads'));
 
  
 //student API's

@@ -13,13 +13,19 @@ var _require = require('../../controllers/student/dashboardcontroller.js'),
     progressController = _require.progressController,
     courseProgress = _require.courseProgress,
     filter = _require.filter,
-    sorting = _require.sorting;
+    sorting = _require.sorting,
+    markVideoAsComplete = _require.markVideoAsComplete,
+    completedCourses = _require.completedCourses,
+    editProfile = _require.editProfile;
 
 var router = express.Router();
 router.get("/profile", verifyToken, getProfile);
+router.put('/editProfile', verifyToken, editProfile);
 router.post("/enroll/:courseId", verifyToken, enrollCourse);
 router["delete"]("/deleteEnroll/:courseId", verifyToken, deleteEnroll);
 router.put("/markascomplete/:courseId", verifyToken, markAsComplete);
+router.put('/markvideoascomplete/:courseId/:videoArrId/:videoId', verifyToken, markVideoAsComplete);
+router.get('/completedCourses', verifyToken, completedCourses);
 router.get("/ranking", verifyToken, topRanks);
 router.get("/progress", verifyToken, progressController);
 router.get('/courseprogress', verifyToken, courseProgress);
