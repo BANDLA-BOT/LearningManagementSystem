@@ -4,15 +4,13 @@ var Student = require("../../models/users/studentModel.js");
 
 var jwt = require("jsonwebtoken");
 
-require("dotenv").config();
-
 var bcrypt = require("bcryptjs");
 
-var twilio = require('twilio'); //Register Controller
+var nodemailer = require('nodemailer'); //Register Controller
 
 
 var register = function register(req, res) {
-  var _req$body, email, firstname, lastname, password, imgPath, user, hashedPassword, newUser;
+  var _req$body, email, firstname, lastname, password, imgPath, user, newUser;
 
   return regeneratorRuntime.async(function register$(_context) {
     while (1) {
@@ -39,44 +37,43 @@ var register = function register(req, res) {
           }));
 
         case 8:
-          hashedPassword = bcrypt.hashSync(password, 10);
           newUser = new Student({
             email: email,
             firstname: firstname,
             lastname: lastname,
-            password: hashedPassword,
+            password: password,
             profilepic: imgPath
           });
-          _context.next = 12;
+          _context.next = 11;
           return regeneratorRuntime.awrap(newUser.save());
 
-        case 12:
+        case 11:
           res.status(201).json({
             Message: "Student registered successfully",
             Student: newUser
           });
-          _context.next = 18;
+          _context.next = 17;
           break;
 
-        case 15:
-          _context.prev = 15;
+        case 14:
+          _context.prev = 14;
           _context.t0 = _context["catch"](0);
           res.status(500).json({
             Message: "Internal server error",
             Error: _context.t0.message
           });
 
-        case 18:
+        case 17:
         case "end":
           return _context.stop();
       }
     }
-  }, null, null, [[0, 15]]);
+  }, null, null, [[0, 14]]);
 }; //Login Controller
 
 
 var login = function login(req, res) {
-  var _req$body2, email, password, existUser, isPasswordMatch, token;
+  var _req$body2, email, password, existUser, token;
 
   return regeneratorRuntime.async(function login$(_context2) {
     while (1) {
@@ -103,10 +100,8 @@ var login = function login(req, res) {
           }));
 
         case 7:
-          isPasswordMatch = bcrypt.compareSync(password, existUser.password);
-
-          if (isPasswordMatch) {
-            _context2.next = 10;
+          if (!(password !== existUser.password)) {
+            _context2.next = 9;
             break;
           }
 
@@ -114,7 +109,7 @@ var login = function login(req, res) {
             message: "Passwords did not match"
           }));
 
-        case 10:
+        case 9:
           token = jwt.sign({
             id: existUser._id
           }, process.env.JWT_SECRET_KEY, {
@@ -125,35 +120,37 @@ var login = function login(req, res) {
             student: existUser,
             Token: token
           });
-          _context2.next = 17;
+          _context2.next = 16;
           break;
 
-        case 14:
-          _context2.prev = 14;
+        case 13:
+          _context2.prev = 13;
           _context2.t0 = _context2["catch"](0);
           res.status(500).json({
             Message: "Internal server error",
             Error: _context2.t0.message
           });
 
-        case 17:
+        case 16:
         case "end":
           return _context2.stop();
       }
     }
-  }, null, null, [[0, 14]]);
+  }, null, null, [[0, 13]]);
 };
 
+var otpStore = new Map();
+
 var sendOtp = function sendOtp(req, res) {
-  var email, student, otp, numbers, len, i, accountSid, authToken;
+  var email, student, otp, otpExpiry, transporter, mailOptions;
   return regeneratorRuntime.async(function sendOtp$(_context3) {
     while (1) {
       switch (_context3.prev = _context3.next) {
         case 0:
-          _context3.prev = 0;
           email = req.body.email;
+          _context3.prev = 1;
           _context3.next = 4;
-          return regeneratorRuntime.awrap(Student.find({
+          return regeneratorRuntime.awrap(Student.findOne({
             email: email
           }));
 
@@ -161,61 +158,103 @@ var sendOtp = function sendOtp(req, res) {
           student = _context3.sent;
 
           if (student) {
-            _context3.next = 9;
+            _context3.next = 7;
             break;
           }
 
           return _context3.abrupt("return", res.status(404).json({
-            message: "No user found with this email ID"
+            message: 'Student not found'
           }));
 
-        case 9:
-          otp = "";
-          numbers = "1234567890";
-          len = numbers.length;
+        case 7:
+          otp = Math.floor(100000 + Math.random() * 900000).toString();
+          otpExpiry = Date.now() + 300000;
+          otpStore.set(email, {
+            otp: otp,
+            expires: otpExpiry
+          });
+          console.log(otpStore);
+          transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+              user: process.env.EMAIL_USER,
+              pass: process.env.EMAIL_PASS
+            }
+          });
+          mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: 'OTP for resetting Password',
+            text: "Your OTP code is ".concat(otp, ". It will expire in 5 minutes.")
+          };
+          transporter.sendMail(mailOptions, function (error, info) {
+            if (error) {
+              return res.status(500).json({
+                message: 'Error sending email',
+                error: error,
+                info: info
+              });
+            }
 
-          for (i = 0; i < 6; i++) {
-            otp += numbers[Math.floor(Math.random() * len)];
-          }
-
-          accountSid = 'USad386f4438ea7568b38b822db298048b';
-          authToken = "";
-
-        case 15:
-          _context3.next = 20;
+            res.json({
+              message: 'OTP sent'
+            });
+          });
+          _context3.next = 19;
           break;
 
-        case 17:
-          _context3.prev = 17;
-          _context3.t0 = _context3["catch"](0);
+        case 16:
+          _context3.prev = 16;
+          _context3.t0 = _context3["catch"](1);
           res.status(500).json({
-            message: "Internal server error",
-            Error: _context3.t0.message
+            message: 'Server error',
+            error: _context3.t0
           });
 
-        case 20:
+        case 19:
         case "end":
           return _context3.stop();
       }
     }
-  }, null, null, [[0, 17]]);
+  }, null, null, [[1, 16]]);
 };
 
-var forgotPassword = function forgotPassword(req, res) {
-  return regeneratorRuntime.async(function forgotPassword$(_context4) {
+var verifyOTP = function verifyOTP(req, res) {
+  var _req$body3, email, otp, storedOtp;
+
+  return regeneratorRuntime.async(function verifyOTP$(_context4) {
     while (1) {
       switch (_context4.prev = _context4.next) {
         case 0:
-          try {
-            console.log(req.cookies);
-          } catch (error) {
-            res.json({
-              message: "Internal server error",
-              Error: error.message
-            });
+          _req$body3 = req.body, email = _req$body3.email, otp = _req$body3.otp;
+          storedOtp = otpStore.get(email);
+          console.log(storedOtp);
+
+          if (storedOtp) {
+            _context4.next = 5;
+            break;
           }
 
-        case 1:
+          return _context4.abrupt("return", res.status(400).json({
+            message: 'No OTP found for this email'
+          }));
+
+        case 5:
+          if (!(storedOtp.otp === otp && storedOtp.expires > Date.now())) {
+            _context4.next = 9;
+            break;
+          }
+
+          return _context4.abrupt("return", res.json({
+            message: 'OTP verified'
+          }));
+
+        case 9:
+          return _context4.abrupt("return", res.status(400).json({
+            message: 'Invalid or expired OTP'
+          }));
+
+        case 10:
         case "end":
           return _context4.stop();
       }
@@ -223,10 +262,76 @@ var forgotPassword = function forgotPassword(req, res) {
   });
 };
 
+var forgotPassword = function forgotPassword(req, res) {
+  var _req$body4, email, newPassword, student, storedOtp;
+
+  return regeneratorRuntime.async(function forgotPassword$(_context5) {
+    while (1) {
+      switch (_context5.prev = _context5.next) {
+        case 0:
+          _req$body4 = req.body, email = _req$body4.email, newPassword = _req$body4.newPassword;
+          _context5.prev = 1;
+          _context5.next = 4;
+          return regeneratorRuntime.awrap(Student.findOne({
+            email: email
+          }));
+
+        case 4:
+          student = _context5.sent;
+
+          if (student) {
+            _context5.next = 7;
+            break;
+          }
+
+          return _context5.abrupt("return", res.status(404).json({
+            message: 'Student not found'
+          }));
+
+        case 7:
+          storedOtp = otpStore.get(email);
+
+          if (storedOtp) {
+            _context5.next = 10;
+            break;
+          }
+
+          return _context5.abrupt("return", res.status(400).json({
+            message: 'No OTP found for this email'
+          }));
+
+        case 10:
+          student.password = newPassword;
+          _context5.next = 13;
+          return regeneratorRuntime.awrap(student.save());
+
+        case 13:
+          otpStore["delete"](email);
+          return _context5.abrupt("return", res.json({
+            message: 'Password changed successfully'
+          }));
+
+        case 17:
+          _context5.prev = 17;
+          _context5.t0 = _context5["catch"](1);
+          res.status(500).json({
+            message: 'Server error',
+            error: _context5.t0
+          });
+
+        case 20:
+        case "end":
+          return _context5.stop();
+      }
+    }
+  }, null, null, [[1, 17]]);
+};
+
 module.exports = {
   register: register,
   login: login,
   sendOtp: sendOtp,
-  forgotPassword: forgotPassword
+  forgotPassword: forgotPassword,
+  verifyOTP: verifyOTP
 };
 //# sourceMappingURL=authController.dev.js.map

@@ -3,7 +3,6 @@ const verifyToken = require("../../utils/verifyToken.js");
 const {
   getProfile,
   enrollCourse,
-  deleteEnroll,
   topRanks,
   markAsComplete,
   progressController,
@@ -12,14 +11,15 @@ const {
   sorting,
   markVideoAsComplete,
   completedCourses,
-  editProfile
+  editProfile,
+  editPassword
 } = require('../../controllers/student/dashboardcontroller.js');
 const router = express.Router();
 
 router.get("/profile", verifyToken, getProfile);
 router.put('/editProfile', verifyToken, editProfile)
+router.put('/editpassword', verifyToken, editPassword)
 router.post("/enroll/:courseId", verifyToken, enrollCourse);
-router.delete("/deleteEnroll/:courseId", verifyToken, deleteEnroll);
 router.put("/markascomplete/:courseId", verifyToken, markAsComplete);
 router.put('/markvideoascomplete/:courseId/:videoArrId/:videoId', verifyToken, markVideoAsComplete)
 router.get('/completedCourses', verifyToken, completedCourses)

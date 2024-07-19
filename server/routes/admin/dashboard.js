@@ -4,16 +4,15 @@ const verifyToken = require('../../utils/verifyToken.js')
 const {dashboardController, searchController} = require('../../controllers/admin/dashboardController.js');
 const {
     getProfile,
-    // enrollCourse,
-    // deleteEnroll,
-    // topRanks,
-    // markAsComplete,
-    // progressController,
-    // courseProgress,
-    // filter,
-    // sorting,
-    // markVideoAsComplete,
-    // completedCourses
+    enrollCourse,
+    topRanks,
+    markAsComplete,
+    progressController,
+    courseProgress,
+    filter,
+    sorting,
+    markVideoAsComplete,
+    completedCourses
   } = require('../../controllers/student/dashboardcontroller.js');
 const { login } = require('../../controllers/student/authController.js')
 
@@ -24,16 +23,14 @@ router.get('/search', adminTokenDecode, searchController)
 //student Access
 router.post('/student/login', adminTokenDecode, login);
 router.get("/student/profile", verifyToken, getProfile);
-// router.post("/enroll/:courseId", verifyToken, enrollCourse);
-// router.delete("/deleteEnroll/:courseId", verifyToken, deleteEnroll);
-// router.put("/markascomplete/:courseId", verifyToken, markAsComplete);
-// router.put('/markvideoascomplete/:courseId/:videoArrId/:videoId', verifyToken, markVideoAsComplete)
-// router.get('/completedCourses', verifyToken, completedCourses)
-// router.get("/ranking", verifyToken, topRanks);
-// router.get("/progress", verifyToken, progressController);
-// router.get('/courseprogress', verifyToken, courseProgress)
-// router.get('/filter', filter)
-// router.get('/sorting', sorting)
-// router.
-// router.post('/')
+router.post("/student/enroll/:courseId", verifyToken, enrollCourse);
+router.put("/student/markascomplete/:courseId", verifyToken, markAsComplete);
+router.put('/student/markvideoascomplete/:courseId/:videoArrId/:videoId', verifyToken, markVideoAsComplete)
+router.get('/student/completedCourses', verifyToken, completedCourses)
+router.get("/student/ranking", verifyToken, topRanks);
+router.get("/student/progress", verifyToken, progressController);
+router.get('/student/courseprogress', verifyToken, courseProgress)
+router.get('/student/filter', filter)
+router.get('/student/sorting', sorting)
+
 module.exports = router

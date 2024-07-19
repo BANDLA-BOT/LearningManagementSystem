@@ -1,11 +1,9 @@
 const Student = require("../../models/users/studentModel.js");
 const jwt = require("jsonwebtoken");
-require("dotenv").config();
 const bcrypt = require("bcryptjs");
-const twilio = require('twilio')
+const nodemailer   = require('nodemailer')
 
 //Register Controller
-
 const register = async (req, res) => {
   try {
     const { email, firstname, lastname, password } = req.body;
@@ -14,12 +12,12 @@ const register = async (req, res) => {
     if (user) {
       return res.json({ message: "User already exists with the email ID" });
     }
-    const hashedPassword = bcrypt.hashSync(password, 10);
+    
     const newUser = new Student({
       email,
       firstname,
       lastname,
-      password: hashedPassword,
+      password:password,
       profilepic: imgPath,
     });
     await newUser.save();
@@ -32,9 +30,7 @@ const register = async (req, res) => {
       .json({ Message: "Internal server error", Error: error.message });
   }
 };
-
 //Login Controller
-
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -45,8 +41,7 @@ const login = async (req, res) => {
     if (!existUser) {
       return res.json({ message: "User doesn't exists" });
     }
-    const isPasswordMatch = bcrypt.compareSync(password, existUser.password);
-    if (!isPasswordMatch) {
+    if (password !== existUser.password) {
       return res.json({ message: "Passwords did not match" });
     }
     const token = jwt.sign({ id: existUser._id }, process.env.JWT_SECRET_KEY, {
@@ -65,37 +60,80 @@ const login = async (req, res) => {
       .json({ Message: "Internal server error", Error: error.message });
   }
 };
+const otpStore = new Map()
 const sendOtp = async (req, res) => {
+  const {email} = req.body
   try {
-    const { email } = req.body;
-
-    const student = await Student.find({ email });
+    const student = await Student.findOne({ email });
     if (!student) {
-      return res
-        .status(404)
-        .json({ message: "No user found with this email ID" });
-    } else {
-      let otp = "";
-      let numbers = "1234567890";
-      let len = numbers.length;
-      for (let i = 0; i < 6; i++) {
-        otp += numbers[Math.floor(Math.random() * len)];
-      }
-      const accountSid = 'USad386f4438ea7568b38b822db298048b'
-      const authToken = ""
+        return res.status(404).json({ message: 'Student not found' });
     }
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpiry = Date.now() + 300000; 
+    otpStore.set(email, { otp, expires: otpExpiry });
+    console.log(otpStore)
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+          user:process.env.EMAIL_USER,
+          pass:process.env.EMAIL_PASS
+      }
+  });
+
+  const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'OTP for resetting Password',
+      text: `Your OTP code is ${otp}. It will expire in 5 minutes.`
+  };
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+        return res.status(500).json({ message: 'Error sending email', error , info:info});
+    }
+    res.json({ message: 'OTP sent' ,});
+});
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Internal server error", Error: error.message });
+    res.status(500).json({ message: 'Server error', error });
   }
 };
-const forgotPassword = async (req, res) => {
-  try {
-    console.log(req.cookies)
-  } catch (error) {
-    res.json({ message: "Internal server error", Error: error.message });
+const verifyOTP = async(req,res)=>{
+  const { email, otp } = req.body;
+    
+  const storedOtp = otpStore.get(email);
+  console.log(storedOtp)
+  if (!storedOtp) {
+      return res.status(400).json({ message: 'No OTP found for this email' });
   }
+
+  if (storedOtp.otp === otp && storedOtp.expires > Date.now()) {
+      return res.json({ message: 'OTP verified' });
+  } else {
+      return res.status(400).json({ message: 'Invalid or expired OTP' });
+  }
+}
+const forgotPassword = async (req, res) => {
+  const { email, newPassword } = req.body;
+    
+    try {
+        const student = await Student.findOne({ email });
+        if (!student) {
+            return res.status(404).json({ message: 'Student not found' });
+        }
+
+        const storedOtp = otpStore.get(email);
+
+        if (!storedOtp) {
+            return res.status(400).json({ message: 'No OTP found for this email' });
+        }
+
+        student.password = newPassword;
+        await student.save();
+        otpStore.delete(email);
+        return res.json({ message: 'Password changed successfully' });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error });
+    }
 };
 
 module.exports = {
@@ -103,4 +141,5 @@ module.exports = {
   login,
   sendOtp,
   forgotPassword,
+  verifyOTP
 };

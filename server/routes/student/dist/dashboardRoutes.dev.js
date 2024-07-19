@@ -7,7 +7,6 @@ var verifyToken = require("../../utils/verifyToken.js");
 var _require = require('../../controllers/student/dashboardcontroller.js'),
     getProfile = _require.getProfile,
     enrollCourse = _require.enrollCourse,
-    deleteEnroll = _require.deleteEnroll,
     topRanks = _require.topRanks,
     markAsComplete = _require.markAsComplete,
     progressController = _require.progressController,
@@ -16,13 +15,14 @@ var _require = require('../../controllers/student/dashboardcontroller.js'),
     sorting = _require.sorting,
     markVideoAsComplete = _require.markVideoAsComplete,
     completedCourses = _require.completedCourses,
-    editProfile = _require.editProfile;
+    editProfile = _require.editProfile,
+    editPassword = _require.editPassword;
 
 var router = express.Router();
 router.get("/profile", verifyToken, getProfile);
 router.put('/editProfile', verifyToken, editProfile);
+router.put('/editpassword', verifyToken, editPassword);
 router.post("/enroll/:courseId", verifyToken, enrollCourse);
-router["delete"]("/deleteEnroll/:courseId", verifyToken, deleteEnroll);
 router.put("/markascomplete/:courseId", verifyToken, markAsComplete);
 router.put('/markvideoascomplete/:courseId/:videoArrId/:videoId', verifyToken, markVideoAsComplete);
 router.get('/completedCourses', verifyToken, completedCourses);

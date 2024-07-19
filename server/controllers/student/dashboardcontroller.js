@@ -24,6 +24,7 @@ const getProfile = async (req, res) => {
     console.log(student);
   } catch (error) {}
 };
+
 const editProfile = async(req,res)=>{
   try {
     const {email, firstname, lastname} = req.body
@@ -39,6 +40,29 @@ const editProfile = async(req,res)=>{
     res.status(500).json({message:"Internal server error", Error:error.message})
   }
 }
+
+const editPassword = async(req,res)=>{
+  try {
+    const userId = req.user.id
+    const {currentPassword, newPassword, reEnterNewPassword} = req.body
+    const student = await Student.findById(userId)
+    if(currentPassword !== student.password){
+      return res.json({message:"You have entered wrong current password"})
+    }
+    if(newPassword === student.password){
+      return res.json({message:"New password should be different from Old password"})
+    }
+    if(newPassword !== reEnterNewPassword){
+      return res.json({message:"Confirm password should same as New password"})
+    }
+    student.password = newPassword
+    await student.save()
+    res.json({message:"Password changed successfully"})
+  } catch (error) {
+    res.status(500).json({message:"Internal server error", Error:error.message})
+  }
+}
+
 const enrollCourse = async (req, res) => {
   const { courseId } = req.params;
   const userId = req.user;
@@ -66,22 +90,6 @@ const enrollCourse = async (req, res) => {
   }
 };
 
-const deleteEnroll = async (req, res) => {
-  try {
-    const userId = req.user;
-    const { courseId } = req.params;
-    const result = await Student.updateOne(
-      { _id: userId.id },
-      { $pull: { enrolled: { _id: courseId } } }
-    );
-    if (result.nModified > 0) {
-      res.status(200).send({ message: "Enrolls Updated" });
-    }
-    res.json({ EnrollUpdated: result });
-  } catch (error) {
-    res.status(500).send({ message: "Server error", error });
-  }
-};
 const topRanks = async (req, res) => {
   try {
     const students = await Student.aggregate([
@@ -124,7 +132,11 @@ const topRanks = async (req, res) => {
 const markVideoAsComplete = async(req,res)=>{
   try {
      const {courseId, videoArrId, videoId} = req.params
+     const userId = req.user.id
+     console.log(userId)
      const course = await courseModel.findById(courseId)
+     const student = await Student.findById({_id:userId})
+     console.log(student)
      if(!course){
       return res.status(404).json({message:"Course not found"})
      }
@@ -135,7 +147,7 @@ const markVideoAsComplete = async(req,res)=>{
      if(video.completed){
        return res.json({message:"You have completed the video, move to next"})
       }
-    //  res.json(video)
+    res.json({message:"Marked", student:student})
   } catch (error) {
     res.status(500).json({message:"Internal server error", Error:error.message})
   }
@@ -183,6 +195,7 @@ const completedCourses = async(req,res)=>{
     res.status(500).json({message:"Internal server error", error:error.message})
   }
 }
+
 const progressController = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -190,7 +203,6 @@ const progressController = async (req, res) => {
     if (!student) {
       return res.status(404).json({ message: "Student not found" });
     }
-
     const totalCourses = student.enrolled.length;
     const completedCourses = student.enrolled.filter(
       (course) => course.isComplete
@@ -265,7 +277,6 @@ const courseProgress = async (req, res) => {
   }
 };
 
-
 //filtering Records 
 
 const filter = async(req,res)=>{
@@ -309,7 +320,6 @@ const sorting = async(req,res)=>{
 module.exports = {
   getProfile,
   enrollCourse,
-  deleteEnroll,
   topRanks,
   markAsComplete,
   completedCourses,
@@ -318,5 +328,6 @@ module.exports = {
   filter,
   sorting,
   markVideoAsComplete,
-  editProfile
+  editProfile,
+  editPassword
 };

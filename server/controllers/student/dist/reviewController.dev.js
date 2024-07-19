@@ -1,8 +1,8 @@
 "use strict";
 
-var courseModel = require('../../models/course/courseModel');
+var courseModel = require("../../models/course/courseModel");
 
-var studentModel = require('../../models/users/studentModel.js');
+var studentModel = require("../../models/users/studentModel.js");
 
 var reviewController = function reviewController(req, res) {
   var courseId, userId, review, course, student;
@@ -69,52 +69,64 @@ var reviewController = function reviewController(req, res) {
 };
 
 var deleteReview = function deleteReview(req, res) {
-  var _req$params, reviewedUserId, courseId, deletedReview;
+  var _req$params, courseId, reviewId, course, reviews, reviewDelete;
 
-  return regeneratorRuntime.async(function deleteReview$(_context2) {
+  return regeneratorRuntime.async(function deleteReview$(_context3) {
     while (1) {
-      switch (_context2.prev = _context2.next) {
+      switch (_context3.prev = _context3.next) {
         case 0:
-          _context2.prev = 0;
-          _req$params = req.params, reviewedUserId = _req$params.reviewedUserId, courseId = _req$params.courseId;
-          _context2.next = 4;
-          return regeneratorRuntime.awrap(courseModel.findByIdAndUpdate(courseId, {
-            $pull: {
-              reviews: {
-                'reviewBy.userId': reviewedUserId
-              }
-            }
-          }, {
-            "new": true
-          }));
+          _context3.prev = 0;
+          _req$params = req.params, courseId = _req$params.courseId, reviewId = _req$params.reviewId;
+          _context3.next = 4;
+          return regeneratorRuntime.awrap(courseModel.findById(courseId));
 
         case 4:
-          deletedReview = _context2.sent;
-          res.json({
-            message: "Review deleted successfully",
-            deletedReview: deletedReview
+          course = _context3.sent;
+          reviews = course.reviews;
+          reviewDelete = reviews.map(function _callee(item) {
+            return regeneratorRuntime.async(function _callee$(_context2) {
+              while (1) {
+                switch (_context2.prev = _context2.next) {
+                  case 0:
+                    if (!(item._id.toString() === reviewId)) {
+                      _context2.next = 3;
+                      break;
+                    }
+
+                    _context2.next = 3;
+                    return regeneratorRuntime.awrap(item.deleteOne({
+                      reviewId: reviewId
+                    }));
+
+                  case 3:
+                  case "end":
+                    return _context2.stop();
+                }
+              }
+            });
           });
-          _context2.next = 11;
+          _context3.next = 9;
+          return regeneratorRuntime.awrap(course.save());
+
+        case 9:
+          res.json(reviewDelete);
+          _context3.next = 15;
           break;
 
-        case 8:
-          _context2.prev = 8;
-          _context2.t0 = _context2["catch"](0);
-          res.status(500).json({
-            message: "Internal server error",
-            error: _context2.t0.message
-          });
+        case 12:
+          _context3.prev = 12;
+          _context3.t0 = _context3["catch"](0);
+          res.json(_context3.t0.message);
 
-        case 11:
+        case 15:
         case "end":
-          return _context2.stop();
+          return _context3.stop();
       }
     }
-  }, null, null, [[0, 8]]);
+  }, null, null, [[0, 12]]);
 };
 
 module.exports = {
-  reviewController: reviewController,
-  deleteReview: deleteReview
+  reviewController: reviewController
 };
 //# sourceMappingURL=reviewController.dev.js.map

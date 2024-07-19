@@ -17,7 +17,9 @@ var dashboardRoutes = require("./routes/student/dashboardRoutes.js");
 
 var createCourseRoute = require("./routes/student/createCourse.js");
 
-var addReview = require("./routes/student/reviewRoute.js"); //Admin imports
+var addReview = require("./routes/student/reviewRoute.js");
+
+var reviewRoute = require('./routes/admin/reviewRoutes.js'); //Admin imports
 
 
 var authAdmin = require('./routes/admin/auth.js');
@@ -44,7 +46,8 @@ app.use("/api/student/course", createCourseRoute);
 app.use("/api/student/review", addReview); //Admin API's
 
 app.use("/api/admin/auth", authAdmin);
-app.use("/api/admin/dashboard", dashboard); //server
+app.use("/api/admin/dashboard", dashboard);
+app.use('/api/admin/review', reviewRoute); //server
 
 app.listen(process.env.PORT, function () {
   console.log("Server running on", process.env.PORT);

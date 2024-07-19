@@ -8,6 +8,7 @@ const authRoutes = require("./routes/student/authRoutes.js");
 const dashboardRoutes = require("./routes/student/dashboardRoutes.js");
 const createCourseRoute = require("./routes/student/createCourse.js");
 const addReview = require("./routes/student/reviewRoute.js");
+const reviewRoute = require('./routes/admin/reviewRoutes.js')
 
 
 //Admin imports
@@ -38,6 +39,7 @@ app.use("/api/student/review", addReview);
 //Admin API's
 app.use("/api/admin/auth", authAdmin);
 app.use("/api/admin/dashboard", dashboard)
+app.use('/api/admin/review', reviewRoute)
 
 //server
 app.listen(process.env.PORT, () => {

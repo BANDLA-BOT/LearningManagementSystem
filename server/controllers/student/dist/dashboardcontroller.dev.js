@@ -113,46 +113,119 @@ var editProfile = function editProfile(req, res) {
   }, null, null, [[0, 10]]);
 };
 
-var enrollCourse = function enrollCourse(req, res) {
-  var courseId, userId, course, student;
-  return regeneratorRuntime.async(function enrollCourse$(_context3) {
+var editPassword = function editPassword(req, res) {
+  var userId, _req$body2, currentPassword, newPassword, reEnterNewPassword, student;
+
+  return regeneratorRuntime.async(function editPassword$(_context3) {
     while (1) {
       switch (_context3.prev = _context3.next) {
         case 0:
+          _context3.prev = 0;
+          userId = req.user.id;
+          _req$body2 = req.body, currentPassword = _req$body2.currentPassword, newPassword = _req$body2.newPassword, reEnterNewPassword = _req$body2.reEnterNewPassword;
+          _context3.next = 5;
+          return regeneratorRuntime.awrap(Student.findById(userId));
+
+        case 5:
+          student = _context3.sent;
+
+          if (!(currentPassword !== student.password)) {
+            _context3.next = 8;
+            break;
+          }
+
+          return _context3.abrupt("return", res.json({
+            message: "You have entered wrong current password"
+          }));
+
+        case 8:
+          if (!(newPassword === student.password)) {
+            _context3.next = 10;
+            break;
+          }
+
+          return _context3.abrupt("return", res.json({
+            message: "New password should be different from Old password"
+          }));
+
+        case 10:
+          if (!(newPassword !== reEnterNewPassword)) {
+            _context3.next = 12;
+            break;
+          }
+
+          return _context3.abrupt("return", res.json({
+            message: "Confirm password should same as New password"
+          }));
+
+        case 12:
+          student.password = newPassword;
+          _context3.next = 15;
+          return regeneratorRuntime.awrap(student.save());
+
+        case 15:
+          res.json({
+            message: "Password changed successfully"
+          });
+          _context3.next = 21;
+          break;
+
+        case 18:
+          _context3.prev = 18;
+          _context3.t0 = _context3["catch"](0);
+          res.status(500).json({
+            message: "Internal server error",
+            Error: _context3.t0.message
+          });
+
+        case 21:
+        case "end":
+          return _context3.stop();
+      }
+    }
+  }, null, null, [[0, 18]]);
+};
+
+var enrollCourse = function enrollCourse(req, res) {
+  var courseId, userId, course, student;
+  return regeneratorRuntime.async(function enrollCourse$(_context4) {
+    while (1) {
+      switch (_context4.prev = _context4.next) {
+        case 0:
           courseId = req.params.courseId;
           userId = req.user;
-          _context3.next = 4;
+          _context4.next = 4;
           return regeneratorRuntime.awrap(courseModel.findById({
             _id: courseId
           }));
 
         case 4:
-          course = _context3.sent;
-          _context3.next = 7;
+          course = _context4.sent;
+          _context4.next = 7;
           return regeneratorRuntime.awrap(Student.findById({
             _id: userId.id
           }));
 
         case 7:
-          student = _context3.sent;
-          _context3.prev = 8;
+          student = _context4.sent;
+          _context4.prev = 8;
 
           if (student) {
-            _context3.next = 11;
+            _context4.next = 11;
             break;
           }
 
-          return _context3.abrupt("return", res.status(400).json({
+          return _context4.abrupt("return", res.status(400).json({
             message: "Student not found"
           }));
 
         case 11:
           if (course) {
-            _context3.next = 13;
+            _context4.next = 13;
             break;
           }
 
-          return _context3.abrupt("return", res.status(400).json({
+          return _context4.abrupt("return", res.status(400).json({
             message: "Course not found"
           }));
 
@@ -161,7 +234,7 @@ var enrollCourse = function enrollCourse(req, res) {
             coursesAvailable: course._id,
             isComplete: false
           });
-          _context3.next = 16;
+          _context4.next = 16;
           return regeneratorRuntime.awrap(student.save());
 
         case 16:
@@ -169,74 +242,23 @@ var enrollCourse = function enrollCourse(req, res) {
             Message: "Course enrolled successfuly",
             Student: student
           });
-          _context3.next = 22;
+          _context4.next = 22;
           break;
 
         case 19:
-          _context3.prev = 19;
-          _context3.t0 = _context3["catch"](8);
+          _context4.prev = 19;
+          _context4.t0 = _context4["catch"](8);
           res.status(500).json({
             message: "Internal server error",
-            Error: _context3.t0.message
+            Error: _context4.t0.message
           });
 
         case 22:
         case "end":
-          return _context3.stop();
-      }
-    }
-  }, null, null, [[8, 19]]);
-};
-
-var deleteEnroll = function deleteEnroll(req, res) {
-  var userId, courseId, result;
-  return regeneratorRuntime.async(function deleteEnroll$(_context4) {
-    while (1) {
-      switch (_context4.prev = _context4.next) {
-        case 0:
-          _context4.prev = 0;
-          userId = req.user;
-          courseId = req.params.courseId;
-          _context4.next = 5;
-          return regeneratorRuntime.awrap(Student.updateOne({
-            _id: userId.id
-          }, {
-            $pull: {
-              enrolled: {
-                _id: courseId
-              }
-            }
-          }));
-
-        case 5:
-          result = _context4.sent;
-
-          if (result.nModified > 0) {
-            res.status(200).send({
-              message: "Enrolls Updated"
-            });
-          }
-
-          res.json({
-            EnrollUpdated: result
-          });
-          _context4.next = 13;
-          break;
-
-        case 10:
-          _context4.prev = 10;
-          _context4.t0 = _context4["catch"](0);
-          res.status(500).send({
-            message: "Server error",
-            error: _context4.t0
-          });
-
-        case 13:
-        case "end":
           return _context4.stop();
       }
     }
-  }, null, null, [[0, 10]]);
+  }, null, null, [[8, 19]]);
 };
 
 var topRanks = function topRanks(req, res) {
@@ -301,7 +323,7 @@ var topRanks = function topRanks(req, res) {
 };
 
 var markVideoAsComplete = function markVideoAsComplete(req, res) {
-  var _req$params, courseId, videoArrId, videoId, course, videosArr, video;
+  var _req$params, courseId, videoArrId, videoId, userId, course, student, videosArr, video;
 
   return regeneratorRuntime.async(function markVideoAsComplete$(_context6) {
     while (1) {
@@ -309,14 +331,24 @@ var markVideoAsComplete = function markVideoAsComplete(req, res) {
         case 0:
           _context6.prev = 0;
           _req$params = req.params, courseId = _req$params.courseId, videoArrId = _req$params.videoArrId, videoId = _req$params.videoId;
-          _context6.next = 4;
+          userId = req.user.id;
+          console.log(userId);
+          _context6.next = 6;
           return regeneratorRuntime.awrap(courseModel.findById(courseId));
 
-        case 4:
+        case 6:
           course = _context6.sent;
+          _context6.next = 9;
+          return regeneratorRuntime.awrap(Student.findById({
+            _id: userId
+          }));
+
+        case 9:
+          student = _context6.sent;
+          console.log(student);
 
           if (course) {
-            _context6.next = 7;
+            _context6.next = 13;
             break;
           }
 
@@ -324,16 +356,16 @@ var markVideoAsComplete = function markVideoAsComplete(req, res) {
             message: "Course not found"
           }));
 
-        case 7:
+        case 13:
           videosArr = course.section.id(videoArrId);
           video = videosArr.videos.id(videoId);
           video.completed = true;
-          _context6.next = 12;
+          _context6.next = 18;
           return regeneratorRuntime.awrap(course.save());
 
-        case 12:
+        case 18:
           if (!video.completed) {
-            _context6.next = 14;
+            _context6.next = 20;
             break;
           }
 
@@ -341,24 +373,28 @@ var markVideoAsComplete = function markVideoAsComplete(req, res) {
             message: "You have completed the video, move to next"
           }));
 
-        case 14:
-          _context6.next = 19;
+        case 20:
+          res.json({
+            message: "Marked",
+            student: student
+          });
+          _context6.next = 26;
           break;
 
-        case 16:
-          _context6.prev = 16;
+        case 23:
+          _context6.prev = 23;
           _context6.t0 = _context6["catch"](0);
           res.status(500).json({
             message: "Internal server error",
             Error: _context6.t0.message
           });
 
-        case 19:
+        case 26:
         case "end":
           return _context6.stop();
       }
     }
-  }, null, null, [[0, 16]]);
+  }, null, null, [[0, 23]]);
 };
 
 var markAsComplete = function markAsComplete(req, res) {
@@ -806,7 +842,6 @@ var sorting = function sorting(req, res) {
 module.exports = {
   getProfile: getProfile,
   enrollCourse: enrollCourse,
-  deleteEnroll: deleteEnroll,
   topRanks: topRanks,
   markAsComplete: markAsComplete,
   completedCourses: completedCourses,
@@ -815,6 +850,7 @@ module.exports = {
   filter: filter,
   sorting: sorting,
   markVideoAsComplete: markVideoAsComplete,
-  editProfile: editProfile
+  editProfile: editProfile,
+  editPassword: editPassword
 };
 //# sourceMappingURL=dashboardcontroller.dev.js.map
