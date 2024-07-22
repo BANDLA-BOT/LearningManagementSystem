@@ -1,6 +1,6 @@
 const express = require('express');
 const multer = require('multer')
-const { register, login, forgotPassword, sendOtp, verifyOTP } = require('../../controllers/student/authController.js')
+const { register, login, sendOtp, verifyOTP, resetPassword, resetPasswordLink } = require('../../controllers/student/authController.js')
 const router = express.Router()
 const storage = multer.diskStorage({
     destination:(req,file,cb)=>{
@@ -15,9 +15,8 @@ const upload = multer({
 })
 router.post('/register', upload.single('profile'), register);
 router.post('/login', login);
-router.put('/sendotp', sendOtp)
-router.post('/verifyotp', verifyOTP)
-router.put('/forgotpassword',forgotPassword)
+router.post('/request-reset-password',resetPasswordLink)
+router.post('/reset-password/:token', resetPassword)
 
 
 module.exports = router 

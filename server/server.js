@@ -14,7 +14,6 @@ const reviewRoute = require('./routes/admin/reviewRoutes.js')
 //Admin imports
 const authAdmin = require('./routes/admin/auth.js')
 const dashboard = require('./routes/admin/dashboard.js')
-
 const cors = require("cors");
 require("dotenv").config();
 const app = express();

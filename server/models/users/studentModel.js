@@ -28,10 +28,7 @@ const studentSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "course",
       },
-      isComplete: {
-        type: Boolean,
-        default: false,
-      },
+      completedVideos:[{courseId:mongoose.Schema.Types.ObjectId, videos:[mongoose.Schema.Types.ObjectId]}],
     },
   ],
 

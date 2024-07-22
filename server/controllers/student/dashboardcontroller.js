@@ -1,5 +1,6 @@
 const Student = require('../../models/users/studentModel.js')
 const courseModel = require('../../models/course/courseModel.js');
+const studentModel = require('../../models/users/studentModel.js');
 
 
 const getProfile = async (req, res) => {
@@ -75,6 +76,11 @@ const enrollCourse = async (req, res) => {
     if (!course) {
       return res.status(400).json({ message: "Course not found" });
     }
+    const Course = student.enrolled
+    const available = Course.some(course => course.coursesAvailable.equals(courseId))
+    if(available){
+      return res.json({Message:"You have already enrolled this course"})
+    }
     student.enrolled.push({
       coursesAvailable: course._id,
       isComplete: false,
@@ -89,7 +95,16 @@ const enrollCourse = async (req, res) => {
       .json({ message: "Internal server error", Error: error.message });
   }
 };
-
+const showEnrolled = async (req,res)=>{
+  const userId = req.user
+  try {
+    const student = await Student.findById({_id:userId.id}).populate('enrolled.coursesAvailable')
+    if(!student) return res.status(404).json({message:"Student not found"})
+    res.status(200).json({message:"Found", List:student.enrolled})
+  } catch (error) {
+    res.status(500).json({message:"Internal server error", error:error.message})
+  }
+}
 const topRanks = async (req, res) => {
   try {
     const students = await Student.aggregate([
@@ -131,69 +146,79 @@ const topRanks = async (req, res) => {
 
 const markVideoAsComplete = async(req,res)=>{
   try {
-     const {courseId, videoArrId, videoId} = req.params
-     const userId = req.user.id
-     console.log(userId)
-     const course = await courseModel.findById(courseId)
-     const student = await Student.findById({_id:userId})
-     console.log(student)
-     if(!course){
-      return res.status(404).json({message:"Course not found"})
-     }
-     const videosArr = course.section.id(videoArrId)
-     const video = videosArr.videos.id(videoId)
-     video.completed = true
-     await course.save()
-     if(video.completed){
-       return res.json({message:"You have completed the video, move to next"})
-      }
-    res.json({message:"Marked", student:student})
+    const {courseId, videoId} = req.params
+    const userId = req.user.id
+    const course = await courseModel.findById(courseId)
+    if(!course){
+      return res.status(404).json({message:"Course not found"});
+    }
+
+    const student = await Student.findById(userId).populate('enrolled.coursesAvailable')
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+    const enrolledCourses = student.enrolled
+    console.log(enrolledCourses)
+    // const enrolledCourse = student.enrolled.find(enroll => enroll.coursesAvailable.equals(courseId))
+    // console.log(enrolledCourse)
+    // if (!enrolledCourse) {
+    //   return res.status(404).json({ message: "Course not enrolled by the student" });
+    // }
+
+    // const alreadyCompleted = enrolledCourse.completedVideos.find(cv => cv.courseId.equals(courseId) && cv.videos.includes(videoId))
+    // if (alreadyCompleted) {
+    //   return res.json({ message: "Video already marked as complete" });
+    // }
+
+    // let courseCompletion = enrolledCourse.completedVideos.find( cv=> cv.courseId.equals(courseId))
+    // if(!courseCompletion){
+    //   courseCompletion = { courseId, videos:[videoId]}
+    //   enrolledCourse.completedVideos.push(courseCompletion)
+    // }
+    // else {
+    //   courseCompletion.videos.push(videoId);
+    // }
+    await student.save()
+
+    const totalVideos = course.section.reduce((acc, section)=> acc+ section.videos.length, 0)
+    const completedVideos = courseCompletion.videos.length
+
+    res.json({
+      message:"Videos marked as complete",
+      completedVideos,
+      totalVideos,
+      allCompleted:completedVideos === totalVideos
+    })
   } catch (error) {
-    res.status(500).json({message:"Internal server error", Error:error.message})
+    res.status(500).json({ message: "Internal server error", error: error.message});
   }
 }
 
-const markAsComplete = async (req, res) => {
-  try {
-    const { courseId } = req.params;
-    const userId = req.user;
-    const course = await courseModel.findById(courseId)
-    const videosArr = course.section
-    const videos = videosArr[0].videos
-    let trueCount = 0;
-    for(let i=0; i<=videos.length; i++){
-      if(videos[i].completed){
-          trueCount++
-          console.log(videos[i])
-          if(videos.length === trueCount){
-            const student = await Student.findOneAndUpdate(
-              { _id: userId.id, "enrolled.coursesAvailable": courseId },
-              {
-                $set: { "enrolled.$.isComplete": true },
-                $addToSet: { completedCourses: { courses: courseId } },
-              },
-              { new: true }
-            );
-            return res.json({message:"Successfully completed Course", Data:student})
-          }
-      }
-      else{
-        return res.json({message:"You have to complete all the videos"})
-      }
-    }
-  } catch (error) {
-    res.json({ message: error.message });
-  }
-};
-
 const completedCourses = async(req,res)=>{
-  try {
-    const userId = req.user
-    const completedList = await Student.findById(userId.id)
-    res.json(completedList.completedCourses)
-  } catch (error) {
-    res.status(500).json({message:"Internal server error", error:error.message})
+ try {
+  const {courseId} = req.params
+  const userId = req.user.id
+
+  const student = await Student.findById(userId).populate('enrolled.coursesAvailable')
+  if (!student) {
+    return res.status(404).json({ message: "Student not found" });
   }
+  const enrolledCourse = student.enrolled.find(enroll => enroll.coursesAvailable.equals(courseId));
+  if (!enrolledCourse) {
+      return res.status(404).json({ message: "Course not enrolled by the student" });
+  }
+  const courseCompletion = enrolledCourse.completedVideos.find(cv => cv.courseId.equals(courseId)) || { videos: [] };
+
+  const course = await courseModel.findById(courseId);
+    const totalVideos = course.sections.reduce((acc, section) => acc + section.videos.length, 0);
+    res.json({
+      completedVideos: courseCompletion.videos,
+      totalVideos,
+      allCompleted: courseCompletion.videos.length === totalVideos
+    });
+ } catch (error) {
+  res.status(500).json({ message: "Internal server error", error: error.message });
+ }
 }
 
 const progressController = async (req, res) => {
@@ -320,8 +345,9 @@ const sorting = async(req,res)=>{
 module.exports = {
   getProfile,
   enrollCourse,
+  showEnrolled,
   topRanks,
-  markAsComplete,
+
   completedCourses,
   progressController,
   courseProgress,

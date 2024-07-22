@@ -36,13 +36,13 @@ const login = async (req, res) => {
     const { email, password } = req.body;
     const existUser = await Student.findOne({
       email: email,
-      password: password,
     });
     if (!existUser) {
       return res.json({ message: "User doesn't exists" });
     }
-    if (password !== existUser.password) {
-      return res.json({ message: "Passwords did not match" });
+    const isValidPassword = bcrypt.compareSync(password, existUser.password)
+    if (!isValidPassword) {
+      return res.json({ message: "Password incorrect" });
     }
     const token = jwt.sign({ id: existUser._id }, process.env.JWT_SECRET_KEY, {
       expiresIn: "15d",
@@ -60,86 +60,50 @@ const login = async (req, res) => {
       .json({ Message: "Internal server error", Error: error.message });
   }
 };
-const otpStore = new Map()
-const sendOtp = async (req, res) => {
-  const {email} = req.body
-  try {
-    const student = await Student.findOne({ email });
-    if (!student) {
-        return res.status(404).json({ message: 'Student not found' });
-    }
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpiry = Date.now() + 300000; 
-    otpStore.set(email, { otp, expires: otpExpiry });
-    console.log(otpStore)
+const resetPasswordLink = async (req, res) => {
+  const { email } = req.body
+  const student = await Student.findOne({email});
+  if(!student){
+    return res.status(404).json({message:"User not found"})
+  }
+  const resetToken = jwt.sign({id:student._id}, process.env.JWT_SECRET_KEY_FOR_RESET_PASSWORD_LINK, {expiresIn:'10m'});
 
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-          user:process.env.EMAIL_USER,
-          pass:process.env.EMAIL_PASS
-      }
+  const transporter = nodemailer.createTransport({
+    service:'gmail',
+    auth:{
+      user:process.env.EMAIL_USER,
+      pass:process.env.EMAIL_PASS
+    },
   });
-
   const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: 'OTP for resetting Password',
-      text: `Your OTP code is ${otp}. It will expire in 5 minutes.`
-  };
+    from:process.env.EMAIL_USER,
+    to:email,
+    subject:'Password reset Link',
+    text:`Please use the following link to reset your password: http://localhost:8000/reset-password/${resetToken}`
+  }
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
-        return res.status(500).json({ message: 'Error sending email', error , info:info});
+      return res.status(500).send('Error sending email');
     }
-    res.json({ message: 'OTP sent' ,});
-});
+    res.send('Password reset email sent');
+  });
+}
+const resetPassword = async(req,res)=>{
+  const {token} = req.params
+  const { newPassword } = req.body;
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY_FOR_RESET_PASSWORD_LINK)
+    const userId = decoded.id
+    const hashedPassword = await bcrypt.hash(newPassword, 10)
+    await Student.findByIdAndUpdate(userId,{password:hashedPassword})
+    res.json({Message:"Password updated successfully"});
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
-  }
-};
-const verifyOTP = async(req,res)=>{
-  const { email, otp } = req.body;
-    
-  const storedOtp = otpStore.get(email);
-  console.log(storedOtp)
-  if (!storedOtp) {
-      return res.status(400).json({ message: 'No OTP found for this email' });
-  }
-
-  if (storedOtp.otp === otp && storedOtp.expires > Date.now()) {
-      return res.json({ message: 'OTP verified' });
-  } else {
-      return res.status(400).json({ message: 'Invalid or expired OTP' });
+    res.status(400).send('Invalid or expired token')
   }
 }
-const forgotPassword = async (req, res) => {
-  const { email, newPassword } = req.body;
-    
-    try {
-        const student = await Student.findOne({ email });
-        if (!student) {
-            return res.status(404).json({ message: 'Student not found' });
-        }
-
-        const storedOtp = otpStore.get(email);
-
-        if (!storedOtp) {
-            return res.status(400).json({ message: 'No OTP found for this email' });
-        }
-
-        student.password = newPassword;
-        await student.save();
-        otpStore.delete(email);
-        return res.json({ message: 'Password changed successfully' });
-    } catch (error) {
-        res.status(500).json({ message: 'Server error', error });
-    }
-};
-
 module.exports = {
   register,
   login,
-  sendOtp,
-  forgotPassword,
-  verifyOTP
+  resetPasswordLink,
+  resetPassword,
 };

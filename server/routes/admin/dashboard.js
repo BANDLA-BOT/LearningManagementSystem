@@ -6,7 +6,6 @@ const {
     getProfile,
     enrollCourse,
     topRanks,
-    markAsComplete,
     progressController,
     courseProgress,
     filter,
@@ -24,7 +23,6 @@ router.get('/search', adminTokenDecode, searchController)
 router.post('/student/login', adminTokenDecode, login);
 router.get("/student/profile", verifyToken, getProfile);
 router.post("/student/enroll/:courseId", verifyToken, enrollCourse);
-router.put("/student/markascomplete/:courseId", verifyToken, markAsComplete);
 router.put('/student/markvideoascomplete/:courseId/:videoArrId/:videoId', verifyToken, markVideoAsComplete)
 router.get('/student/completedCourses', verifyToken, completedCourses)
 router.get("/student/ranking", verifyToken, topRanks);

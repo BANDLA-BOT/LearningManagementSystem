@@ -7,9 +7,10 @@ var multer = require('multer');
 var _require = require('../../controllers/student/authController.js'),
     register = _require.register,
     login = _require.login,
-    forgotPassword = _require.forgotPassword,
     sendOtp = _require.sendOtp,
-    verifyOTP = _require.verifyOTP;
+    verifyOTP = _require.verifyOTP,
+    resetPassword = _require.resetPassword,
+    resetPasswordLink = _require.resetPasswordLink;
 
 var router = express.Router();
 var storage = multer.diskStorage({
@@ -25,8 +26,7 @@ var upload = multer({
 });
 router.post('/register', upload.single('profile'), register);
 router.post('/login', login);
-router.put('/sendotp', sendOtp);
-router.post('/verifyotp', verifyOTP);
-router.put('/forgotpassword', forgotPassword);
+router.post('/request-reset-password', resetPasswordLink);
+router.post('/reset-password/:token', resetPassword);
 module.exports = router;
 //# sourceMappingURL=authRoutes.dev.js.map

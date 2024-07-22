@@ -14,7 +14,6 @@ var _require2 = require('../../controllers/student/dashboardcontroller.js'),
     getProfile = _require2.getProfile,
     enrollCourse = _require2.enrollCourse,
     topRanks = _require2.topRanks,
-    markAsComplete = _require2.markAsComplete,
     progressController = _require2.progressController,
     courseProgress = _require2.courseProgress,
     filter = _require2.filter,
@@ -32,7 +31,6 @@ router.get('/search', adminTokenDecode, searchController); //student Access
 router.post('/student/login', adminTokenDecode, login);
 router.get("/student/profile", verifyToken, getProfile);
 router.post("/student/enroll/:courseId", verifyToken, enrollCourse);
-router.put("/student/markascomplete/:courseId", verifyToken, markAsComplete);
 router.put('/student/markvideoascomplete/:courseId/:videoArrId/:videoId', verifyToken, markVideoAsComplete);
 router.get('/student/completedCourses', verifyToken, completedCourses);
 router.get("/student/ranking", verifyToken, topRanks);

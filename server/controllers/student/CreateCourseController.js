@@ -1,62 +1,41 @@
 const CourseModel = require('../../models/course/courseModel.js')
 const multer = require('multer')
+const cloudinary = require('cloudinary').v2
 const path = require('path')
 
-
-//multer 
-
-const storage = multer.diskStorage({
-    destination:(req,file, cb)=>{
-        cb(null, 'videos/')
-    },
-    filename:(req,file, cb)=>{
-        cb(null, Date.now() + path.extname(file.originalname))
-    }
-})
-const upload = multer({storage:storage})
-
-exports.upload = upload.fields([
-    {name:'videosFile', maxCount:1},
-    {name:"thumbnail", maxCount:1}
-]);
-
 const createCourse = async (req,res)=>{
-    try {
-        const {title, price, rating, reviews, resources, description, instructor, section} = req.body
-        const newCourse = new CourseModel({
-            title,
-            price,
-            rating,
-            reviews,
-            description,
-            instructor,
-            resources,
-            section,
-        })
-        await newCourse.save()
-        res.json({message:"Course created successfully", Course:newCourse})
-    } catch (error) {
-        res.status(500).json({message:"Internal server error", Error:error.message})
-    }
-}
-
-const addVideos = async(req,res)=>{
    try {
-    const videos = req.files['videoFile'] || []
-    const thumbnail = req.files['thumbnail'] || []
-    const sections = JSON.parse(section)
-
-    const uploadVideos = sections.map((sec, index)=>{
-        const secVideos = video.filter(vid => vid.filename === `section[${index}].video`).map((video, videoIndex)=>({
-            title:video.originalname,
-            thumbnail:thumbnail[videoIndex] ? `/videos/${thumbnail[videoIndex].filename}`:'',
-            videoFile: `/videos/${video.filename}`
-        }))
+    const {title, price, description} = req.body
+    const newCourse = await CourseModel.create({
+        title,price, description
     })
+    res.json(newCourse)
    } catch (error) {
-    
+    res.json(error.message)
    }
 }
+const uploadVideos = async (req,res)=>{
+    try {
+        const {courseId} = req.params
+        const {title,videoTitle} = req.body
+        const course = await CourseModel.findById(courseId)
+        const section = course.section
+        if(!req.file && !req.file.buffer){
+            return res.status(400).json({ error: 'No file provided in the request' });
+        }
+        const result = cloudinary.uploader.upload_stream({resource_type:'video'}, async(err, result)=>{
+            if (err) {
+                console.error('Error uploading to Cloudinary:', err);
+                return res.status(500).json({ error: 'Error uploading to Cloudinary' });
+              }
+              section.push({title:title, videos:[{title:videoTitle, url:result.secure_url}]})
+              await course.save()
+              res.status(201).json({ message: 'Video uploaded successfully', section:course.section})
+        }).end(req.file.buffer)
+    } catch (error) {
+        console.error('Error uploading video:', error);
+        res.status(500).json({ error: 'Error uploading video' });
+    }
+}
 
-
-module.exports = {createCourse,addVideos}
+module.exports = {createCourse, uploadVideos}

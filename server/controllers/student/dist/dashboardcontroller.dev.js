@@ -4,6 +4,8 @@ var Student = require('../../models/users/studentModel.js');
 
 var courseModel = require('../../models/course/courseModel.js');
 
+var studentModel = require('../../models/users/studentModel.js');
+
 var getProfile = function getProfile(req, res) {
   var id, student, courses;
   return regeneratorRuntime.async(function getProfile$(_context) {
@@ -187,7 +189,7 @@ var editPassword = function editPassword(req, res) {
 };
 
 var enrollCourse = function enrollCourse(req, res) {
-  var courseId, userId, course, student;
+  var courseId, userId, course, student, Course, available;
   return regeneratorRuntime.async(function enrollCourse$(_context4) {
     while (1) {
       switch (_context4.prev = _context4.next) {
@@ -230,45 +232,109 @@ var enrollCourse = function enrollCourse(req, res) {
           }));
 
         case 13:
+          Course = student.enrolled;
+          available = Course.some(function (course) {
+            return course.coursesAvailable.equals(courseId);
+          });
+
+          if (!available) {
+            _context4.next = 17;
+            break;
+          }
+
+          return _context4.abrupt("return", res.json({
+            Message: "You have already enrolled this course"
+          }));
+
+        case 17:
           student.enrolled.push({
             coursesAvailable: course._id,
             isComplete: false
           });
-          _context4.next = 16;
+          _context4.next = 20;
           return regeneratorRuntime.awrap(student.save());
 
-        case 16:
+        case 20:
           res.status(200).json({
             Message: "Course enrolled successfuly",
             Student: student
           });
-          _context4.next = 22;
+          _context4.next = 26;
           break;
 
-        case 19:
-          _context4.prev = 19;
+        case 23:
+          _context4.prev = 23;
           _context4.t0 = _context4["catch"](8);
           res.status(500).json({
             message: "Internal server error",
             Error: _context4.t0.message
           });
 
-        case 22:
+        case 26:
         case "end":
           return _context4.stop();
       }
     }
-  }, null, null, [[8, 19]]);
+  }, null, null, [[8, 23]]);
+};
+
+var showEnrolled = function showEnrolled(req, res) {
+  var userId, student;
+  return regeneratorRuntime.async(function showEnrolled$(_context5) {
+    while (1) {
+      switch (_context5.prev = _context5.next) {
+        case 0:
+          userId = req.user;
+          _context5.prev = 1;
+          _context5.next = 4;
+          return regeneratorRuntime.awrap(Student.findById({
+            _id: userId.id
+          }).populate('enrolled.coursesAvailable'));
+
+        case 4:
+          student = _context5.sent;
+
+          if (student) {
+            _context5.next = 7;
+            break;
+          }
+
+          return _context5.abrupt("return", res.status(404).json({
+            message: "Student not found"
+          }));
+
+        case 7:
+          res.status(200).json({
+            message: "Found",
+            List: student.enrolled
+          });
+          _context5.next = 13;
+          break;
+
+        case 10:
+          _context5.prev = 10;
+          _context5.t0 = _context5["catch"](1);
+          res.status(500).json({
+            message: "Internal server error",
+            error: _context5.t0.message
+          });
+
+        case 13:
+        case "end":
+          return _context5.stop();
+      }
+    }
+  }, null, null, [[1, 10]]);
 };
 
 var topRanks = function topRanks(req, res) {
   var students;
-  return regeneratorRuntime.async(function topRanks$(_context5) {
+  return regeneratorRuntime.async(function topRanks$(_context6) {
     while (1) {
-      switch (_context5.prev = _context5.next) {
+      switch (_context6.prev = _context6.next) {
         case 0:
-          _context5.prev = 0;
-          _context5.next = 3;
+          _context6.prev = 0;
+          _context6.next = 3;
           return regeneratorRuntime.awrap(Student.aggregate([{
             $match: {
               "enrolled.isComplete": true
@@ -300,229 +366,197 @@ var topRanks = function topRanks(req, res) {
           }]));
 
         case 3:
-          students = _context5.sent;
+          students = _context6.sent;
           res.status(200).json({
             rankings: students
           });
-          _context5.next = 10;
+          _context6.next = 10;
           break;
 
         case 7:
-          _context5.prev = 7;
-          _context5.t0 = _context5["catch"](0);
+          _context6.prev = 7;
+          _context6.t0 = _context6["catch"](0);
           res.status(500).json({
             message: "Internal server error"
           });
 
         case 10:
         case "end":
-          return _context5.stop();
+          return _context6.stop();
       }
     }
   }, null, null, [[0, 7]]);
 };
 
 var markVideoAsComplete = function markVideoAsComplete(req, res) {
-  var _req$params, courseId, videoArrId, videoId, userId, course, student, videosArr, video;
+  var _req$params, courseId, videoId, userId, course, student, enrolledCourses, totalVideos, completedVideos;
 
-  return regeneratorRuntime.async(function markVideoAsComplete$(_context6) {
-    while (1) {
-      switch (_context6.prev = _context6.next) {
-        case 0:
-          _context6.prev = 0;
-          _req$params = req.params, courseId = _req$params.courseId, videoArrId = _req$params.videoArrId, videoId = _req$params.videoId;
-          userId = req.user.id;
-          console.log(userId);
-          _context6.next = 6;
-          return regeneratorRuntime.awrap(courseModel.findById(courseId));
-
-        case 6:
-          course = _context6.sent;
-          _context6.next = 9;
-          return regeneratorRuntime.awrap(Student.findById({
-            _id: userId
-          }));
-
-        case 9:
-          student = _context6.sent;
-          console.log(student);
-
-          if (course) {
-            _context6.next = 13;
-            break;
-          }
-
-          return _context6.abrupt("return", res.status(404).json({
-            message: "Course not found"
-          }));
-
-        case 13:
-          videosArr = course.section.id(videoArrId);
-          video = videosArr.videos.id(videoId);
-          video.completed = true;
-          _context6.next = 18;
-          return regeneratorRuntime.awrap(course.save());
-
-        case 18:
-          if (!video.completed) {
-            _context6.next = 20;
-            break;
-          }
-
-          return _context6.abrupt("return", res.json({
-            message: "You have completed the video, move to next"
-          }));
-
-        case 20:
-          res.json({
-            message: "Marked",
-            student: student
-          });
-          _context6.next = 26;
-          break;
-
-        case 23:
-          _context6.prev = 23;
-          _context6.t0 = _context6["catch"](0);
-          res.status(500).json({
-            message: "Internal server error",
-            Error: _context6.t0.message
-          });
-
-        case 26:
-        case "end":
-          return _context6.stop();
-      }
-    }
-  }, null, null, [[0, 23]]);
-};
-
-var markAsComplete = function markAsComplete(req, res) {
-  var courseId, userId, course, videosArr, videos, trueCount, i, student;
-  return regeneratorRuntime.async(function markAsComplete$(_context7) {
+  return regeneratorRuntime.async(function markVideoAsComplete$(_context7) {
     while (1) {
       switch (_context7.prev = _context7.next) {
         case 0:
           _context7.prev = 0;
-          courseId = req.params.courseId;
-          userId = req.user;
+          _req$params = req.params, courseId = _req$params.courseId, videoId = _req$params.videoId;
+          userId = req.user.id;
           _context7.next = 5;
           return regeneratorRuntime.awrap(courseModel.findById(courseId));
 
         case 5:
           course = _context7.sent;
-          videosArr = course.section;
-          videos = videosArr[0].videos;
-          trueCount = 0;
-          i = 0;
+
+          if (course) {
+            _context7.next = 8;
+            break;
+          }
+
+          return _context7.abrupt("return", res.status(404).json({
+            message: "Course not found"
+          }));
+
+        case 8:
+          _context7.next = 10;
+          return regeneratorRuntime.awrap(Student.findById(userId).populate('enrolled.coursesAvailable'));
 
         case 10:
-          if (!(i <= videos.length)) {
-            _context7.next = 25;
+          student = _context7.sent;
+
+          if (student) {
+            _context7.next = 13;
             break;
           }
 
-          if (!videos[i].completed) {
-            _context7.next = 21;
-            break;
-          }
+          return _context7.abrupt("return", res.status(404).json({
+            message: "Student not found"
+          }));
 
-          trueCount++;
-          console.log(videos[i]);
-
-          if (!(videos.length === trueCount)) {
-            _context7.next = 19;
-            break;
-          }
+        case 13:
+          enrolledCourses = student.enrolled;
+          console.log(enrolledCourses); // const enrolledCourse = student.enrolled.find(enroll => enroll.coursesAvailable.equals(courseId))
+          // console.log(enrolledCourse)
+          // if (!enrolledCourse) {
+          //   return res.status(404).json({ message: "Course not enrolled by the student" });
+          // }
+          // const alreadyCompleted = enrolledCourse.completedVideos.find(cv => cv.courseId.equals(courseId) && cv.videos.includes(videoId))
+          // if (alreadyCompleted) {
+          //   return res.json({ message: "Video already marked as complete" });
+          // }
+          // let courseCompletion = enrolledCourse.completedVideos.find( cv=> cv.courseId.equals(courseId))
+          // if(!courseCompletion){
+          //   courseCompletion = { courseId, videos:[videoId]}
+          //   enrolledCourse.completedVideos.push(courseCompletion)
+          // }
+          // else {
+          //   courseCompletion.videos.push(videoId);
+          // }
 
           _context7.next = 17;
-          return regeneratorRuntime.awrap(Student.findOneAndUpdate({
-            _id: userId.id,
-            "enrolled.coursesAvailable": courseId
-          }, {
-            $set: {
-              "enrolled.$.isComplete": true
-            },
-            $addToSet: {
-              completedCourses: {
-                courses: courseId
-              }
-            }
-          }, {
-            "new": true
-          }));
+          return regeneratorRuntime.awrap(student.save());
 
         case 17:
-          student = _context7.sent;
-          return _context7.abrupt("return", res.json({
-            message: "Successfully completed Course",
-            Data: student
-          }));
-
-        case 19:
-          _context7.next = 22;
+          totalVideos = course.section.reduce(function (acc, section) {
+            return acc + section.videos.length;
+          }, 0);
+          completedVideos = courseCompletion.videos.length;
+          res.json({
+            message: "Videos marked as complete",
+            completedVideos: completedVideos,
+            totalVideos: totalVideos,
+            allCompleted: completedVideos === totalVideos
+          });
+          _context7.next = 25;
           break;
-
-        case 21:
-          return _context7.abrupt("return", res.json({
-            message: "You have to complete all the videos"
-          }));
 
         case 22:
-          i++;
-          _context7.next = 10;
-          break;
-
-        case 25:
-          _context7.next = 30;
-          break;
-
-        case 27:
-          _context7.prev = 27;
+          _context7.prev = 22;
           _context7.t0 = _context7["catch"](0);
-          res.json({
-            message: _context7.t0.message
+          res.status(500).json({
+            message: "Internal server error",
+            error: _context7.t0.message
           });
 
-        case 30:
+        case 25:
         case "end":
           return _context7.stop();
       }
     }
-  }, null, null, [[0, 27]]);
+  }, null, null, [[0, 22]]);
 };
 
 var completedCourses = function completedCourses(req, res) {
-  var userId, completedList;
+  var courseId, userId, student, enrolledCourse, _courseCompletion, course, totalVideos;
+
   return regeneratorRuntime.async(function completedCourses$(_context8) {
     while (1) {
       switch (_context8.prev = _context8.next) {
         case 0:
           _context8.prev = 0;
-          userId = req.user;
-          _context8.next = 4;
-          return regeneratorRuntime.awrap(Student.findById(userId.id));
+          courseId = req.params.courseId;
+          userId = req.user.id;
+          _context8.next = 5;
+          return regeneratorRuntime.awrap(Student.findById(userId).populate('enrolled.coursesAvailable'));
 
-        case 4:
-          completedList = _context8.sent;
-          res.json(completedList.completedCourses);
-          _context8.next = 11;
-          break;
+        case 5:
+          student = _context8.sent;
+
+          if (student) {
+            _context8.next = 8;
+            break;
+          }
+
+          return _context8.abrupt("return", res.status(404).json({
+            message: "Student not found"
+          }));
 
         case 8:
-          _context8.prev = 8;
+          enrolledCourse = student.enrolled.find(function (enroll) {
+            return enroll.coursesAvailable.equals(courseId);
+          });
+
+          if (enrolledCourse) {
+            _context8.next = 11;
+            break;
+          }
+
+          return _context8.abrupt("return", res.status(404).json({
+            message: "Course not enrolled by the student"
+          }));
+
+        case 11:
+          _courseCompletion = enrolledCourse.completedVideos.find(function (cv) {
+            return cv.courseId.equals(courseId);
+          }) || {
+            videos: []
+          };
+          _context8.next = 14;
+          return regeneratorRuntime.awrap(courseModel.findById(courseId));
+
+        case 14:
+          course = _context8.sent;
+          totalVideos = course.sections.reduce(function (acc, section) {
+            return acc + section.videos.length;
+          }, 0);
+          res.json({
+            completedVideos: _courseCompletion.videos,
+            totalVideos: totalVideos,
+            allCompleted: _courseCompletion.videos.length === totalVideos
+          });
+          _context8.next = 22;
+          break;
+
+        case 19:
+          _context8.prev = 19;
           _context8.t0 = _context8["catch"](0);
           res.status(500).json({
             message: "Internal server error",
             error: _context8.t0.message
           });
 
-        case 11:
+        case 22:
         case "end":
           return _context8.stop();
       }
     }
-  }, null, null, [[0, 8]]);
+  }, null, null, [[0, 19]]);
 };
 
 var progressController = function progressController(req, res) {
@@ -842,8 +876,8 @@ var sorting = function sorting(req, res) {
 module.exports = {
   getProfile: getProfile,
   enrollCourse: enrollCourse,
+  showEnrolled: showEnrolled,
   topRanks: topRanks,
-  markAsComplete: markAsComplete,
   completedCourses: completedCourses,
   progressController: progressController,
   courseProgress: courseProgress,

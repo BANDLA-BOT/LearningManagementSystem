@@ -17,7 +17,7 @@ var sectionSchema = new mongoose.Schema({
 });
 var courseSchema = new mongoose.Schema({
   title: {
-    type: String,
+    type: String || 'untitled',
     required: true
   },
   price: {
@@ -27,8 +27,8 @@ var courseSchema = new mongoose.Schema({
   },
   rating: {
     type: Number,
-    min: 1,
-    max: 5
+    max: 5,
+    "default": 0
   },
   reviews: [{
     reviewBy: {

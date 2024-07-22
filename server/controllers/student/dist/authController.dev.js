@@ -73,7 +73,7 @@ var register = function register(req, res) {
 
 
 var login = function login(req, res) {
-  var _req$body2, email, password, existUser, token;
+  var _req$body2, email, password, existUser, isValidPassword, token;
 
   return regeneratorRuntime.async(function login$(_context2) {
     while (1) {
@@ -83,8 +83,7 @@ var login = function login(req, res) {
           _req$body2 = req.body, email = _req$body2.email, password = _req$body2.password;
           _context2.next = 4;
           return regeneratorRuntime.awrap(Student.findOne({
-            email: email,
-            password: password
+            email: email
           }));
 
         case 4:
@@ -100,16 +99,18 @@ var login = function login(req, res) {
           }));
 
         case 7:
-          if (!(password !== existUser.password)) {
-            _context2.next = 9;
+          isValidPassword = bcrypt.compareSync(password, existUser.password);
+
+          if (isValidPassword) {
+            _context2.next = 10;
             break;
           }
 
           return _context2.abrupt("return", res.json({
-            message: "Passwords did not match"
+            message: "Password incorrect"
           }));
 
-        case 9:
+        case 10:
           token = jwt.sign({
             id: existUser._id
           }, process.env.JWT_SECRET_KEY, {
@@ -120,60 +121,55 @@ var login = function login(req, res) {
             student: existUser,
             Token: token
           });
-          _context2.next = 16;
+          _context2.next = 17;
           break;
 
-        case 13:
-          _context2.prev = 13;
+        case 14:
+          _context2.prev = 14;
           _context2.t0 = _context2["catch"](0);
           res.status(500).json({
             Message: "Internal server error",
             Error: _context2.t0.message
           });
 
-        case 16:
+        case 17:
         case "end":
           return _context2.stop();
       }
     }
-  }, null, null, [[0, 13]]);
+  }, null, null, [[0, 14]]);
 };
 
-var otpStore = new Map();
-
-var sendOtp = function sendOtp(req, res) {
-  var email, student, otp, otpExpiry, transporter, mailOptions;
-  return regeneratorRuntime.async(function sendOtp$(_context3) {
+var resetPasswordLink = function resetPasswordLink(req, res) {
+  var email, student, resetToken, transporter, mailOptions;
+  return regeneratorRuntime.async(function resetPasswordLink$(_context3) {
     while (1) {
       switch (_context3.prev = _context3.next) {
         case 0:
           email = req.body.email;
-          _context3.prev = 1;
-          _context3.next = 4;
+          _context3.next = 3;
           return regeneratorRuntime.awrap(Student.findOne({
             email: email
           }));
 
-        case 4:
+        case 3:
           student = _context3.sent;
 
           if (student) {
-            _context3.next = 7;
+            _context3.next = 6;
             break;
           }
 
           return _context3.abrupt("return", res.status(404).json({
-            message: 'Student not found'
+            message: "User not found"
           }));
 
-        case 7:
-          otp = Math.floor(100000 + Math.random() * 900000).toString();
-          otpExpiry = Date.now() + 300000;
-          otpStore.set(email, {
-            otp: otp,
-            expires: otpExpiry
+        case 6:
+          resetToken = jwt.sign({
+            id: student._id
+          }, process.env.JWT_SECRET_KEY_FOR_RESET_PASSWORD_LINK, {
+            expiresIn: '10m'
           });
-          console.log(otpStore);
           transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
@@ -184,154 +180,70 @@ var sendOtp = function sendOtp(req, res) {
           mailOptions = {
             from: process.env.EMAIL_USER,
             to: email,
-            subject: 'OTP for resetting Password',
-            text: "Your OTP code is ".concat(otp, ". It will expire in 5 minutes.")
+            subject: 'Password reset Link',
+            text: "Please use the following link to reset your password: http://localhost:8000/reset-password/".concat(resetToken)
           };
           transporter.sendMail(mailOptions, function (error, info) {
             if (error) {
-              return res.status(500).json({
-                message: 'Error sending email',
-                error: error,
-                info: info
-              });
+              return res.status(500).send('Error sending email');
             }
 
-            res.json({
-              message: 'OTP sent'
-            });
+            res.send('Password reset email sent');
           });
-          _context3.next = 19;
-          break;
-
-        case 16:
-          _context3.prev = 16;
-          _context3.t0 = _context3["catch"](1);
-          res.status(500).json({
-            message: 'Server error',
-            error: _context3.t0
-          });
-
-        case 19:
-        case "end":
-          return _context3.stop();
-      }
-    }
-  }, null, null, [[1, 16]]);
-};
-
-var verifyOTP = function verifyOTP(req, res) {
-  var _req$body3, email, otp, storedOtp;
-
-  return regeneratorRuntime.async(function verifyOTP$(_context4) {
-    while (1) {
-      switch (_context4.prev = _context4.next) {
-        case 0:
-          _req$body3 = req.body, email = _req$body3.email, otp = _req$body3.otp;
-          storedOtp = otpStore.get(email);
-          console.log(storedOtp);
-
-          if (storedOtp) {
-            _context4.next = 5;
-            break;
-          }
-
-          return _context4.abrupt("return", res.status(400).json({
-            message: 'No OTP found for this email'
-          }));
-
-        case 5:
-          if (!(storedOtp.otp === otp && storedOtp.expires > Date.now())) {
-            _context4.next = 9;
-            break;
-          }
-
-          return _context4.abrupt("return", res.json({
-            message: 'OTP verified'
-          }));
-
-        case 9:
-          return _context4.abrupt("return", res.status(400).json({
-            message: 'Invalid or expired OTP'
-          }));
 
         case 10:
         case "end":
-          return _context4.stop();
+          return _context3.stop();
       }
     }
   });
 };
 
-var forgotPassword = function forgotPassword(req, res) {
-  var _req$body4, email, newPassword, student, storedOtp;
-
-  return regeneratorRuntime.async(function forgotPassword$(_context5) {
+var resetPassword = function resetPassword(req, res) {
+  var token, newPassword, decoded, userId, hashedPassword;
+  return regeneratorRuntime.async(function resetPassword$(_context4) {
     while (1) {
-      switch (_context5.prev = _context5.next) {
+      switch (_context4.prev = _context4.next) {
         case 0:
-          _req$body4 = req.body, email = _req$body4.email, newPassword = _req$body4.newPassword;
-          _context5.prev = 1;
-          _context5.next = 4;
-          return regeneratorRuntime.awrap(Student.findOne({
-            email: email
-          }));
-
-        case 4:
-          student = _context5.sent;
-
-          if (student) {
-            _context5.next = 7;
-            break;
-          }
-
-          return _context5.abrupt("return", res.status(404).json({
-            message: 'Student not found'
-          }));
+          token = req.params.token;
+          newPassword = req.body.newPassword;
+          _context4.prev = 2;
+          decoded = jwt.verify(token, process.env.JWT_SECRET_KEY_FOR_RESET_PASSWORD_LINK);
+          userId = decoded.id;
+          _context4.next = 7;
+          return regeneratorRuntime.awrap(bcrypt.hash(newPassword, 10));
 
         case 7:
-          storedOtp = otpStore.get(email);
-
-          if (storedOtp) {
-            _context5.next = 10;
-            break;
-          }
-
-          return _context5.abrupt("return", res.status(400).json({
-            message: 'No OTP found for this email'
+          hashedPassword = _context4.sent;
+          _context4.next = 10;
+          return regeneratorRuntime.awrap(Student.findByIdAndUpdate(userId, {
+            password: hashedPassword
           }));
 
         case 10:
-          student.password = newPassword;
-          _context5.next = 13;
-          return regeneratorRuntime.awrap(student.save());
+          res.json({
+            Message: "Password updated successfully"
+          });
+          _context4.next = 16;
+          break;
 
         case 13:
-          otpStore["delete"](email);
-          return _context5.abrupt("return", res.json({
-            message: 'Password changed successfully'
-          }));
+          _context4.prev = 13;
+          _context4.t0 = _context4["catch"](2);
+          res.status(400).send('Invalid or expired token');
 
-        case 17:
-          _context5.prev = 17;
-          _context5.t0 = _context5["catch"](1);
-          res.status(500).json({
-            message: 'Server error',
-            error: _context5.t0
-          });
-
-        case 20:
+        case 16:
         case "end":
-          return _context5.stop();
+          return _context4.stop();
       }
     }
-  }, null, null, [[1, 17]]);
+  }, null, null, [[2, 13]]);
 };
 
 module.exports = {
   register: register,
   login: login,
-  sendOtp: sendOtp,
-  forgotPassword: forgotPassword,
-  verifyOTP: verifyOTP
+  resetPasswordLink: resetPasswordLink,
+  resetPassword: resetPassword
 };
 //# sourceMappingURL=authController.dev.js.map
