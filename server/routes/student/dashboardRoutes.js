@@ -8,13 +8,33 @@ const {
   courseProgress,
   filter,
   sorting,
+  resourceController,
   markVideoAsComplete,
   completedCourses,
   editProfile,
   editPassword,
-  showEnrolled
+  showEnrolled,
+  ratingController
 } = require('../../controllers/student/dashboardcontroller.js');
+const multer = require("multer");
 const router = express.Router();
+
+
+
+//Multer to upload resources
+
+const storage = multer.diskStorage({
+  destination:(req,file,cb)=>{
+    cb(null, 'resources')
+  },
+  filename:(req,file,cb)=>{
+    cb(null,`${Date.now()}-${file.originalname}`)
+}
+})
+const upload = multer({
+  storage:storage
+})
+
 
 //dashboard
 router.get("/profile", verifyToken, getProfile);
@@ -22,6 +42,7 @@ router.put('/editProfile', verifyToken, editProfile)
 router.put('/editpassword', verifyToken, editPassword)
 router.post("/enroll/:courseId", verifyToken, enrollCourse);
 router.get('/showenroll', verifyToken, showEnrolled)
+router.post('/resources/:courseId', upload.single('file'),resourceController)
 
 // course completion 
 router.post('/markvideoascomplete/:courseId/:videoId', verifyToken, markVideoAsComplete)
@@ -35,5 +56,9 @@ router.get('/courseprogress', verifyToken, courseProgress)
 //filter & sorting
 router.get('/filter', filter)
 router.get('/sorting', sorting)
+
+//Ratings
+
+router.post('/rate/:courseId/rate', verifyToken, ratingController)
 
 module.exports = router;

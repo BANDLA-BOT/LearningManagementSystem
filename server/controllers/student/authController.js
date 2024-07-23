@@ -13,17 +13,18 @@ const register = async (req, res) => {
       return res.json({ message: "User already exists with the email ID" });
     }
     
+    const hashedPassword = bcrypt.hashSync(password, 10)
     const newUser = new Student({
       email,
       firstname,
       lastname,
-      password:password,
+      password:hashedPassword,
       profilepic: imgPath,
     });
     await newUser.save();
     res
       .status(201)
-      .json({ Message: "Student registered successfully", Student: newUser });
+      .json({ Message: "Student registered successfully", Student: newUser , register:true});
   } catch (error) {
     res
       .status(500)
@@ -34,6 +35,7 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    console.log(email, password)
     const existUser = await Student.findOne({
       email: email,
     });
@@ -42,7 +44,7 @@ const login = async (req, res) => {
     }
     const isValidPassword = bcrypt.compareSync(password, existUser.password)
     if (!isValidPassword) {
-      return res.json({ message: "Password incorrect" });
+      return res.json({ message: "Password incorrect"});
     }
     const token = jwt.sign({ id: existUser._id }, process.env.JWT_SECRET_KEY, {
       expiresIn: "15d",
@@ -53,6 +55,7 @@ const login = async (req, res) => {
         message: "Student logged in successfully",
         student: existUser,
         Token: token,
+        login:true
       });
   } catch (error) {
     res

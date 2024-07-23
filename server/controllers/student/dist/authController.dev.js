@@ -10,7 +10,7 @@ var nodemailer = require('nodemailer'); //Register Controller
 
 
 var register = function register(req, res) {
-  var _req$body, email, firstname, lastname, password, imgPath, user, newUser;
+  var _req$body, email, firstname, lastname, password, imgPath, user, hashedPassword, newUser;
 
   return regeneratorRuntime.async(function register$(_context) {
     while (1) {
@@ -37,38 +37,40 @@ var register = function register(req, res) {
           }));
 
         case 8:
+          hashedPassword = bcrypt.hashSync(password, 10);
           newUser = new Student({
             email: email,
             firstname: firstname,
             lastname: lastname,
-            password: password,
+            password: hashedPassword,
             profilepic: imgPath
           });
-          _context.next = 11;
+          _context.next = 12;
           return regeneratorRuntime.awrap(newUser.save());
 
-        case 11:
+        case 12:
           res.status(201).json({
             Message: "Student registered successfully",
-            Student: newUser
+            Student: newUser,
+            register: true
           });
-          _context.next = 17;
+          _context.next = 18;
           break;
 
-        case 14:
-          _context.prev = 14;
+        case 15:
+          _context.prev = 15;
           _context.t0 = _context["catch"](0);
           res.status(500).json({
             Message: "Internal server error",
             Error: _context.t0.message
           });
 
-        case 17:
+        case 18:
         case "end":
           return _context.stop();
       }
     }
-  }, null, null, [[0, 14]]);
+  }, null, null, [[0, 15]]);
 }; //Login Controller
 
 
@@ -81,16 +83,17 @@ var login = function login(req, res) {
         case 0:
           _context2.prev = 0;
           _req$body2 = req.body, email = _req$body2.email, password = _req$body2.password;
-          _context2.next = 4;
+          console.log(email, password);
+          _context2.next = 5;
           return regeneratorRuntime.awrap(Student.findOne({
             email: email
           }));
 
-        case 4:
+        case 5:
           existUser = _context2.sent;
 
           if (existUser) {
-            _context2.next = 7;
+            _context2.next = 8;
             break;
           }
 
@@ -98,11 +101,11 @@ var login = function login(req, res) {
             message: "User doesn't exists"
           }));
 
-        case 7:
+        case 8:
           isValidPassword = bcrypt.compareSync(password, existUser.password);
 
           if (isValidPassword) {
-            _context2.next = 10;
+            _context2.next = 11;
             break;
           }
 
@@ -110,7 +113,7 @@ var login = function login(req, res) {
             message: "Password incorrect"
           }));
 
-        case 10:
+        case 11:
           token = jwt.sign({
             id: existUser._id
           }, process.env.JWT_SECRET_KEY, {
@@ -119,25 +122,26 @@ var login = function login(req, res) {
           res.status(200).json({
             message: "Student logged in successfully",
             student: existUser,
-            Token: token
+            Token: token,
+            login: true
           });
-          _context2.next = 17;
+          _context2.next = 18;
           break;
 
-        case 14:
-          _context2.prev = 14;
+        case 15:
+          _context2.prev = 15;
           _context2.t0 = _context2["catch"](0);
           res.status(500).json({
             Message: "Internal server error",
             Error: _context2.t0.message
           });
 
-        case 17:
+        case 18:
         case "end":
           return _context2.stop();
       }
     }
-  }, null, null, [[0, 14]]);
+  }, null, null, [[0, 15]]);
 };
 
 var resetPasswordLink = function resetPasswordLink(req, res) {

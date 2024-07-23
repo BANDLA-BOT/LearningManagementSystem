@@ -17,7 +17,7 @@ var sectionSchema = new mongoose.Schema({
 });
 var courseSchema = new mongoose.Schema({
   title: {
-    type: String || 'untitled',
+    type: String || "untitled",
     required: true
   },
   price: {
@@ -25,11 +25,18 @@ var courseSchema = new mongoose.Schema({
     required: true,
     "default": 0
   },
-  rating: {
-    type: Number,
-    max: 5,
-    "default": 0
-  },
+  rating: [{
+    rate: {
+      type: Number,
+      min: 1,
+      max: 5,
+      "default": 1
+    },
+    ratedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'student'
+    }
+  }],
   reviews: [{
     reviewBy: {
       userId: {
@@ -38,10 +45,19 @@ var courseSchema = new mongoose.Schema({
       },
       review: {
         type: String
-      }
+      } // rating:{
+      //   type:Number,
+      //   min:1,
+      //   max:5,
+      //   default:1
+      // }
+
     }
   }],
-  resources: [String],
+  resources: [{
+    title: String,
+    url: String
+  }],
   description: {
     type: String
   },

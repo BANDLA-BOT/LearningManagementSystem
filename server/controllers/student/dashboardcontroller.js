@@ -1,6 +1,6 @@
 const Student = require('../../models/users/studentModel.js')
 const courseModel = require('../../models/course/courseModel.js');
-const studentModel = require('../../models/users/studentModel.js');
+
 
 
 const getProfile = async (req, res) => {
@@ -21,6 +21,7 @@ const getProfile = async (req, res) => {
       message: "Students Profile",
       Profile: student,
       courses: courses,
+      status:true
     });
     console.log(student);
   } catch (error) {}
@@ -342,12 +343,57 @@ const sorting = async(req,res)=>{
   }
 }
 
+const ratingController = async(req,res)=>{
+  const { courseId } = req.params
+  const { rating } = req.query
+  const userId = req.user.id
+  console.log(userId)
+  if(!rating || rating < 1 || rating > 5){
+    return res.status(400).send('Invalid rating. Must be between 1 and 5')
+  }
+  try {
+    const course = await courseModel.findById(courseId);
+    if(!course){
+      return res.status(404).json('Course not found.')
+    }
+
+    const existingRating = course.rating.find(r => r.ratedBy.toString() === userId)
+    if(existingRating){
+      return res.status(400).json({message:"You have already rated this course"})
+    }
+    
+    course.rating.push({
+      rate:Number(rating),
+      ratedBy:userId
+    })
+    await course.save()
+    res.json({message:"Thank you for rating the course"})
+  } catch (error) {
+    res.status(500).json({message:"Internal server error", error:error.message})
+  }
+}
+
+
+const resourceController = async(req,res)=>{
+  try {
+      const { courseId } = req.params
+      const {title} = req.body
+      const userId = req.user
+      const filePath = `${req.file.destination}/${req.file.filename}`
+      const course = await courseModel.findById(courseId).populate('resources')
+      course.resources.push({title:title, url:filePath})
+      await course.save()
+    res.json(course)
+  } catch (error) {
+    res.json(error.message)
+  }
+}
 module.exports = {
   getProfile,
   enrollCourse,
   showEnrolled,
   topRanks,
-
+  resourceController,
   completedCourses,
   progressController,
   courseProgress,
@@ -355,5 +401,6 @@ module.exports = {
   sorting,
   markVideoAsComplete,
   editProfile,
-  editPassword
+  editPassword,
+  ratingController
 };

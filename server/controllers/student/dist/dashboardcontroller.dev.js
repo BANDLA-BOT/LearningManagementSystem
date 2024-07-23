@@ -4,8 +4,6 @@ var Student = require('../../models/users/studentModel.js');
 
 var courseModel = require('../../models/course/courseModel.js');
 
-var studentModel = require('../../models/users/studentModel.js');
-
 var getProfile = function getProfile(req, res) {
   var id, student, courses;
   return regeneratorRuntime.async(function getProfile$(_context) {
@@ -51,7 +49,8 @@ var getProfile = function getProfile(req, res) {
           res.json({
             message: "Students Profile",
             Profile: student,
-            courses: courses
+            courses: courses,
+            status: true
           });
           console.log(student);
           _context.next = 19;
@@ -873,11 +872,131 @@ var sorting = function sorting(req, res) {
   }, null, null, [[0, 24]]);
 };
 
+var ratingController = function ratingController(req, res) {
+  var courseId, rating, userId, course, existingRating;
+  return regeneratorRuntime.async(function ratingController$(_context14) {
+    while (1) {
+      switch (_context14.prev = _context14.next) {
+        case 0:
+          courseId = req.params.courseId;
+          rating = req.query.rating;
+          userId = req.user.id;
+          console.log(userId);
+
+          if (!(!rating || rating < 1 || rating > 5)) {
+            _context14.next = 6;
+            break;
+          }
+
+          return _context14.abrupt("return", res.status(400).send('Invalid rating. Must be between 1 and 5'));
+
+        case 6:
+          _context14.prev = 6;
+          _context14.next = 9;
+          return regeneratorRuntime.awrap(courseModel.findById(courseId));
+
+        case 9:
+          course = _context14.sent;
+
+          if (course) {
+            _context14.next = 12;
+            break;
+          }
+
+          return _context14.abrupt("return", res.status(404).json('Course not found.'));
+
+        case 12:
+          existingRating = course.rating.find(function (r) {
+            return r.ratedBy.toString() === userId;
+          });
+
+          if (!existingRating) {
+            _context14.next = 15;
+            break;
+          }
+
+          return _context14.abrupt("return", res.status(400).json({
+            message: "You have already rated this course"
+          }));
+
+        case 15:
+          course.rating.push({
+            rate: Number(rating),
+            ratedBy: userId
+          });
+          _context14.next = 18;
+          return regeneratorRuntime.awrap(course.save());
+
+        case 18:
+          res.json({
+            message: "Thank you for rating the course"
+          });
+          _context14.next = 24;
+          break;
+
+        case 21:
+          _context14.prev = 21;
+          _context14.t0 = _context14["catch"](6);
+          res.status(500).json({
+            message: "Internal server error",
+            error: _context14.t0.message
+          });
+
+        case 24:
+        case "end":
+          return _context14.stop();
+      }
+    }
+  }, null, null, [[6, 21]]);
+};
+
+var resourceController = function resourceController(req, res) {
+  var courseId, title, userId, filePath, course;
+  return regeneratorRuntime.async(function resourceController$(_context15) {
+    while (1) {
+      switch (_context15.prev = _context15.next) {
+        case 0:
+          _context15.prev = 0;
+          courseId = req.params.courseId;
+          title = req.body.title;
+          userId = req.user;
+          filePath = "".concat(req.file.destination, "/").concat(req.file.filename);
+          _context15.next = 7;
+          return regeneratorRuntime.awrap(courseModel.findById(courseId).populate('resources'));
+
+        case 7:
+          course = _context15.sent;
+          course.resources.push({
+            title: title,
+            url: filePath
+          });
+          _context15.next = 11;
+          return regeneratorRuntime.awrap(course.save());
+
+        case 11:
+          res.json(course);
+          _context15.next = 17;
+          break;
+
+        case 14:
+          _context15.prev = 14;
+          _context15.t0 = _context15["catch"](0);
+          res.json(_context15.t0.message);
+
+        case 17:
+        case "end":
+          return _context15.stop();
+      }
+    }
+  }, null, null, [[0, 14]]);
+};
+
 module.exports = {
   getProfile: getProfile,
   enrollCourse: enrollCourse,
   showEnrolled: showEnrolled,
   topRanks: topRanks,
+  resourceController: resourceController,
   completedCourses: completedCourses,
   progressController: progressController,
   courseProgress: courseProgress,
@@ -885,6 +1004,7 @@ module.exports = {
   sorting: sorting,
   markVideoAsComplete: markVideoAsComplete,
   editProfile: editProfile,
-  editPassword: editPassword
+  editPassword: editPassword,
+  ratingController: ratingController
 };
 //# sourceMappingURL=dashboardcontroller.dev.js.map
