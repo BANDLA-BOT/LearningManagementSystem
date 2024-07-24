@@ -1,13 +1,18 @@
 const express = require('express');
 const multer = require('multer')
-const { register, login, sendOtp, verifyOTP, resetPassword, resetPasswordLink } = require('../../controllers/student/authController.js')
+const fs = require('fs')
+const { register, login, resetPassword, resetPasswordLink } = require('../../controllers/student/authController.js')
 const router = express.Router()
+
+if(!fs.existsSync('/uploads')){
+    fs.mkdirSync('/uploads')
+}
 const storage = multer.diskStorage({
     destination:(req,file,cb)=>{
-        cb(null, 'uploads')
+        cb(null, '/uploads')
     },
     filename:(req,file,cb)=>{
-        cb(null,`${Date.now()}-${file.originalname}`)
+        cb(null,`${Date.now()}-student-${file.originalname}`)
     }
 })
 const upload = multer({

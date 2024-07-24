@@ -991,6 +991,88 @@ var resourceController = function resourceController(req, res) {
   }, null, null, [[0, 14]]);
 };
 
+var askQuestion = function askQuestion(req, res) {
+  var _req$params2, videoId, courseId, question, askedBy, course, discussion;
+
+  return regeneratorRuntime.async(function askQuestion$(_context16) {
+    while (1) {
+      switch (_context16.prev = _context16.next) {
+        case 0:
+          _req$params2 = req.params, videoId = _req$params2.videoId, courseId = _req$params2.courseId;
+          question = req.body.question;
+          askedBy = req.user.id;
+          _context16.prev = 3;
+          _context16.next = 6;
+          return regeneratorRuntime.awrap(courseModel.findById(courseId));
+
+        case 6:
+          course = _context16.sent;
+          discussion = course.discussions;
+          discussion.push({
+            videoId: videoId,
+            courseId: courseId,
+            askedBy: askedBy,
+            question: question
+          });
+          _context16.next = 11;
+          return regeneratorRuntime.awrap(course.save());
+
+        case 11:
+          res.json({
+            message: "We have got your question, you will get answer back from our instructor"
+          });
+          _context16.next = 17;
+          break;
+
+        case 14:
+          _context16.prev = 14;
+          _context16.t0 = _context16["catch"](3);
+          res.status(500).json({
+            message: "Internal server error",
+            error: _context16.t0.message
+          });
+
+        case 17:
+        case "end":
+          return _context16.stop();
+      }
+    }
+  }, null, null, [[3, 14]]);
+};
+
+var topDiscussions = function topDiscussions(req, res) {
+  var courseId, course, discussion;
+  return regeneratorRuntime.async(function topDiscussions$(_context17) {
+    while (1) {
+      switch (_context17.prev = _context17.next) {
+        case 0:
+          _context17.prev = 0;
+          courseId = req.params.courseId;
+          _context17.next = 4;
+          return regeneratorRuntime.awrap(courseModel.find({
+            _id: courseId
+          }).populate('discussions'));
+
+        case 4:
+          course = _context17.sent;
+          discussion = course.discussions;
+          res.json(discussion);
+          _context17.next = 12;
+          break;
+
+        case 9:
+          _context17.prev = 9;
+          _context17.t0 = _context17["catch"](0);
+          res.send(_context17.t0.message);
+
+        case 12:
+        case "end":
+          return _context17.stop();
+      }
+    }
+  }, null, null, [[0, 9]]);
+};
+
 module.exports = {
   getProfile: getProfile,
   enrollCourse: enrollCourse,
@@ -1005,6 +1087,8 @@ module.exports = {
   markVideoAsComplete: markVideoAsComplete,
   editProfile: editProfile,
   editPassword: editPassword,
-  ratingController: ratingController
+  ratingController: ratingController,
+  askQuestion: askQuestion,
+  topDiscussions: topDiscussions
 };
 //# sourceMappingURL=dashboardcontroller.dev.js.map

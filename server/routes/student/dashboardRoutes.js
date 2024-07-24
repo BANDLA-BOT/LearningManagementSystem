@@ -14,7 +14,9 @@ const {
   editProfile,
   editPassword,
   showEnrolled,
-  ratingController
+  ratingController,
+  askQuestion,
+  topDiscussions
 } = require('../../controllers/student/dashboardcontroller.js');
 const multer = require("multer");
 const router = express.Router();
@@ -58,7 +60,11 @@ router.get('/filter', filter)
 router.get('/sorting', sorting)
 
 //Ratings
-
 router.post('/rate/:courseId/rate', verifyToken, ratingController)
 
+
+
+//Ask question
+router.post('/ask/:courseId/:videoId', verifyToken, askQuestion)
+router.get('/topDiscuss/:courseId/:videoId', verifyToken,topDiscussions)
 module.exports = router;

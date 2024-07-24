@@ -12,7 +12,7 @@ const register = async (req, res) => {
     if (user) {
       return res.json({ message: "User already exists with the email ID" });
     }
-    
+      
     const hashedPassword = bcrypt.hashSync(password, 10)
     const newUser = new Student({
       email,

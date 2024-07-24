@@ -4,21 +4,26 @@ var express = require('express');
 
 var multer = require('multer');
 
+var fs = require('fs');
+
 var _require = require('../../controllers/student/authController.js'),
     register = _require.register,
     login = _require.login,
-    sendOtp = _require.sendOtp,
-    verifyOTP = _require.verifyOTP,
     resetPassword = _require.resetPassword,
     resetPasswordLink = _require.resetPasswordLink;
 
 var router = express.Router();
+
+if (!fs.existsSync('/uploads')) {
+  fs.mkdirSync('/uploads');
+}
+
 var storage = multer.diskStorage({
   destination: function destination(req, file, cb) {
-    cb(null, 'uploads');
+    cb(null, '/uploads');
   },
   filename: function filename(req, file, cb) {
-    cb(null, "".concat(Date.now(), "-").concat(file.originalname));
+    cb(null, "".concat(Date.now(), "-student-").concat(file.originalname));
   }
 });
 var upload = multer({

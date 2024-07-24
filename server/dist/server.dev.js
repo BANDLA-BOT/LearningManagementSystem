@@ -24,7 +24,12 @@ var reviewRoute = require('./routes/admin/reviewRoutes.js'); //Admin imports
 
 var authAdmin = require('./routes/admin/auth.js');
 
-var dashboard = require('./routes/admin/dashboard.js');
+var dashboard = require('./routes/admin/dashboard.js'); //Instructor imports 
+
+
+var authInstructor = require('./routes/instructor/auth.js');
+
+var discussions = require('./routes/instructor/discussions.js');
 
 var cors = require("cors");
 
@@ -60,7 +65,10 @@ app.use("/api/student/review", addReview); //Admin API's
 
 app.use("/api/admin/auth", authAdmin);
 app.use("/api/admin/dashboard", dashboard);
-app.use('/api/admin/review', reviewRoute); //server
+app.use('/api/admin/review', reviewRoute); //Instructor API's 
+
+app.use('/api/instructor/auth', authInstructor);
+app.use('/api/instructor/discussion', discussions); //server
 
 app.listen(process.env.PORT, function () {
   console.log("Server running on", process.env.PORT);

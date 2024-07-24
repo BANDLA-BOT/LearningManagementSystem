@@ -11,6 +11,39 @@ const sectionSchema = new mongoose.Schema({
   thumbnail: String,
   videos: [videoSchema],
 });
+
+
+const discussionSchema = new mongoose.Schema({
+  courseId:{
+    type:mongoose.Schema.Types.ObjectId,
+    ref:'course'
+  },
+  videoId:{
+    type:mongoose.Schema.Types.ObjectId,
+    ref:'course'
+  },
+  question:{
+    type:String,
+    required:true,
+  },
+  askedBy:{
+    type:mongoose.Schema.Types.ObjectId,
+    ref:'student'
+  },
+  answer:{
+    type:String,
+  },
+  answeredBy:{
+    type:mongoose.Schema.Types.ObjectId,
+    ref:'instructor'
+  },
+  createdAt:{
+    type:Date,
+    default:Date.now()
+  }
+})
+
+
 const courseSchema = new mongoose.Schema({
   title: {
     type: String || "untitled",
@@ -44,12 +77,6 @@ const courseSchema = new mongoose.Schema({
         review: {
           type: String,
         },
-        // rating:{
-        //   type:Number,
-        //   min:1,
-        //   max:5,
-        //   default:1
-        // }
       },
     },
   ],
@@ -62,6 +89,7 @@ const courseSchema = new mongoose.Schema({
   description: {
     type: String,
   },
+  discussions:[discussionSchema],
   instructor: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "instructor",

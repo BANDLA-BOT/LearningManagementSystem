@@ -388,6 +388,36 @@ const resourceController = async(req,res)=>{
     res.json(error.message)
   }
 }
+const askQuestion = async(req,res)=>{
+  const {videoId, courseId} = req.params
+  const { question } = req.body
+  const askedBy = req.user.id
+  try {
+    const course = await courseModel.findById(courseId)
+    const discussion = course.discussions
+    discussion.push({
+      videoId:videoId,
+      courseId:courseId,
+      askedBy:askedBy,
+      question:question
+    })
+    await course.save()
+    res.json({message:"We have got your question, you will get answer back from our instructor"})
+  } catch (error) {
+    res.status(500).json({message:"Internal server error", error:error.message})
+  }
+}
+
+const topDiscussions = async(req,res)=>{
+  try {
+    const {courseId} = req.params
+    const course = await courseModel.find({_id:courseId}).populate('discussions')
+    const discussion = course.discussions
+    res.json(discussion)
+  } catch (error) {
+    res.send(error.message)
+  }
+}
 module.exports = {
   getProfile,
   enrollCourse,
@@ -402,5 +432,7 @@ module.exports = {
   markVideoAsComplete,
   editProfile,
   editPassword,
-  ratingController
+  ratingController,
+  askQuestion,
+  topDiscussions
 };

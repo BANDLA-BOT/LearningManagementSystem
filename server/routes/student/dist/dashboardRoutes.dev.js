@@ -18,7 +18,9 @@ var _require = require('../../controllers/student/dashboardcontroller.js'),
     editProfile = _require.editProfile,
     editPassword = _require.editPassword,
     showEnrolled = _require.showEnrolled,
-    ratingController = _require.ratingController;
+    ratingController = _require.ratingController,
+    askQuestion = _require.askQuestion,
+    topDiscussions = _require.topDiscussions;
 
 var multer = require("multer");
 
@@ -53,6 +55,9 @@ router.get('/courseprogress', verifyToken, courseProgress); //filter & sorting
 router.get('/filter', filter);
 router.get('/sorting', sorting); //Ratings
 
-router.post('/rate/:courseId/rate', verifyToken, ratingController);
+router.post('/rate/:courseId/rate', verifyToken, ratingController); //Ask question
+
+router.post('/ask/:courseId/:videoId', verifyToken, askQuestion);
+router.get('/topDiscuss/:courseId/:videoId', verifyToken, topDiscussions);
 module.exports = router;
 //# sourceMappingURL=dashboardRoutes.dev.js.map

@@ -14,6 +14,13 @@ const reviewRoute = require('./routes/admin/reviewRoutes.js')
 //Admin imports
 const authAdmin = require('./routes/admin/auth.js')
 const dashboard = require('./routes/admin/dashboard.js')
+
+//Instructor imports 
+
+const authInstructor = require('./routes/instructor/auth.js')
+const discussions = require('./routes/instructor/discussions.js')
+
+
 const cors = require("cors");
 require("dotenv").config();
 const app = express();
@@ -56,6 +63,10 @@ app.use("/api/student/review", addReview);
 app.use("/api/admin/auth", authAdmin);
 app.use("/api/admin/dashboard", dashboard)
 app.use('/api/admin/review', reviewRoute)
+
+//Instructor API's 
+app.use('/api/instructor/auth', authInstructor)
+app.use('/api/instructor/discussion', discussions)
 
 //server
 app.listen(process.env.PORT, () => {
