@@ -15,8 +15,6 @@ var authRoutes = require("./routes/student/authRoutes.js");
 
 var dashboardRoutes = require("./routes/student/dashboardRoutes.js");
 
-var createCourseRoute = require("./routes/student/createCourse.js");
-
 var addReview = require("./routes/student/reviewRoute.js");
 
 var reviewRoute = require('./routes/admin/reviewRoutes.js'); //Admin imports
@@ -28,6 +26,8 @@ var dashboard = require('./routes/admin/dashboard.js'); //Instructor imports
 
 
 var authInstructor = require('./routes/instructor/auth.js');
+
+var createCourseRoute = require("./routes/instructor/dashboard.js");
 
 var discussions = require('./routes/instructor/discussions.js');
 
@@ -60,7 +60,6 @@ app.use('/resources', express["static"]('resources')); //student API's
 
 app.use("/api/student/auth", authRoutes);
 app.use("/api/student/dashboard", dashboardRoutes);
-app.use("/api/student/course", createCourseRoute);
 app.use("/api/student/review", addReview); //Admin API's
 
 app.use("/api/admin/auth", authAdmin);
@@ -68,6 +67,7 @@ app.use("/api/admin/dashboard", dashboard);
 app.use('/api/admin/review', reviewRoute); //Instructor API's 
 
 app.use('/api/instructor/auth', authInstructor);
+app.use("/api/instructor/course", createCourseRoute);
 app.use('/api/instructor/discussion', discussions); //server
 
 app.listen(process.env.PORT, function () {

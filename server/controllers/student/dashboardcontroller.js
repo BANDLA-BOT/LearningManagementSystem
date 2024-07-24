@@ -160,25 +160,25 @@ const markVideoAsComplete = async(req,res)=>{
     }
     const enrolledCourses = student.enrolled
     console.log(enrolledCourses)
-    // const enrolledCourse = student.enrolled.find(enroll => enroll.coursesAvailable.equals(courseId))
-    // console.log(enrolledCourse)
-    // if (!enrolledCourse) {
-    //   return res.status(404).json({ message: "Course not enrolled by the student" });
-    // }
+    const enrolledCourse = student.enrolled.find(enroll => enroll.coursesAvailable.equals(courseId))
+    console.log(enrolledCourse)
+    if (!enrolledCourse) {
+      return res.status(404).json({ message: "Course not enrolled by the student" });
+    }
 
-    // const alreadyCompleted = enrolledCourse.completedVideos.find(cv => cv.courseId.equals(courseId) && cv.videos.includes(videoId))
-    // if (alreadyCompleted) {
-    //   return res.json({ message: "Video already marked as complete" });
-    // }
+    const alreadyCompleted = enrolledCourse.completedVideos.find(cv => cv.courseId.equals(courseId) && cv.videos.includes(videoId))
+    if (alreadyCompleted) {
+      return res.json({ message: "Video already marked as complete" });
+    }
 
-    // let courseCompletion = enrolledCourse.completedVideos.find( cv=> cv.courseId.equals(courseId))
-    // if(!courseCompletion){
-    //   courseCompletion = { courseId, videos:[videoId]}
-    //   enrolledCourse.completedVideos.push(courseCompletion)
-    // }
-    // else {
-    //   courseCompletion.videos.push(videoId);
-    // }
+    let courseCompletion = enrolledCourse.completedVideos.find( cv=> cv.courseId.equals(courseId))
+    if(!courseCompletion){
+      courseCompletion = { courseId, videos:[videoId]}
+      enrolledCourse.completedVideos.push(courseCompletion)
+    }
+    else {
+      courseCompletion.videos.push(videoId);
+    }
     await student.save()
 
     const totalVideos = course.section.reduce((acc, section)=> acc+ section.videos.length, 0)
@@ -374,20 +374,7 @@ const ratingController = async(req,res)=>{
 }
 
 
-const resourceController = async(req,res)=>{
-  try {
-      const { courseId } = req.params
-      const {title} = req.body
-      const userId = req.user
-      const filePath = `${req.file.destination}/${req.file.filename}`
-      const course = await courseModel.findById(courseId).populate('resources')
-      course.resources.push({title:title, url:filePath})
-      await course.save()
-    res.json(course)
-  } catch (error) {
-    res.json(error.message)
-  }
-}
+
 const askQuestion = async(req,res)=>{
   const {videoId, courseId} = req.params
   const { question } = req.body
@@ -410,12 +397,28 @@ const askQuestion = async(req,res)=>{
 
 const topDiscussions = async(req,res)=>{
   try {
-    const {courseId} = req.params
-    const course = await courseModel.find({_id:courseId}).populate('discussions')
+    const {courseId, videoId} = req.params
+    const course = await courseModel.findById(courseId)
     const discussion = course.discussions
-    res.json(discussion)
+    let data=[]
+    discussion.map((item)=>{
+      if(!item){
+        return res.json({Message:"There are discussions on this video"})
+      }
+      if(item.videoId.toString() === videoId){
+        console.log('Matched')
+        data.push({question:item.question,answer:item.answer || 'waiting for answer', answeredBy:item.answeredBy || 'Instructor busy in Writing answer', createdAt:item.createdAt})
+        return data
+      }
+      else{
+        console.log("No")
+      }
+    })
+    if(data.length<=10){
+      res.json({message:`Top ${data.length} discussions on this video`, Data:data})
+    }
   } catch (error) {
-    res.send(error.message)
+    
   }
 }
 module.exports = {
@@ -423,7 +426,6 @@ module.exports = {
   enrollCourse,
   showEnrolled,
   topRanks,
-  resourceController,
   completedCourses,
   progressController,
   courseProgress,

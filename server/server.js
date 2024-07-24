@@ -6,7 +6,6 @@ const cookieParser = require('cookie-parser')
 //Student imports 
 const authRoutes = require("./routes/student/authRoutes.js");
 const dashboardRoutes = require("./routes/student/dashboardRoutes.js");
-const createCourseRoute = require("./routes/student/createCourse.js");
 const addReview = require("./routes/student/reviewRoute.js");
 const reviewRoute = require('./routes/admin/reviewRoutes.js')
 
@@ -18,6 +17,7 @@ const dashboard = require('./routes/admin/dashboard.js')
 //Instructor imports 
 
 const authInstructor = require('./routes/instructor/auth.js')
+const createCourseRoute = require("./routes/instructor/dashboard.js");
 const discussions = require('./routes/instructor/discussions.js')
 
 
@@ -56,7 +56,6 @@ app.use('/resources', express.static('resources'))
 //student API's
 app.use("/api/student/auth", authRoutes);
 app.use("/api/student/dashboard", dashboardRoutes);
-app.use("/api/student/course", createCourseRoute);
 app.use("/api/student/review", addReview);
 
 //Admin API's
@@ -66,6 +65,7 @@ app.use('/api/admin/review', reviewRoute)
 
 //Instructor API's 
 app.use('/api/instructor/auth', authInstructor)
+app.use("/api/instructor/course", createCourseRoute);
 app.use('/api/instructor/discussion', discussions)
 
 //server

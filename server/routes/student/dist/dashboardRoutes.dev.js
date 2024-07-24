@@ -12,7 +12,6 @@ var _require = require('../../controllers/student/dashboardcontroller.js'),
     courseProgress = _require.courseProgress,
     filter = _require.filter,
     sorting = _require.sorting,
-    resourceController = _require.resourceController,
     markVideoAsComplete = _require.markVideoAsComplete,
     completedCourses = _require.completedCourses,
     editProfile = _require.editProfile,
@@ -24,26 +23,13 @@ var _require = require('../../controllers/student/dashboardcontroller.js'),
 
 var multer = require("multer");
 
-var router = express.Router(); //Multer to upload resources
-
-var storage = multer.diskStorage({
-  destination: function destination(req, file, cb) {
-    cb(null, 'resources');
-  },
-  filename: function filename(req, file, cb) {
-    cb(null, "".concat(Date.now(), "-").concat(file.originalname));
-  }
-});
-var upload = multer({
-  storage: storage
-}); //dashboard
+var router = express.Router(); //dashboard
 
 router.get("/profile", verifyToken, getProfile);
 router.put('/editProfile', verifyToken, editProfile);
 router.put('/editpassword', verifyToken, editPassword);
 router.post("/enroll/:courseId", verifyToken, enrollCourse);
-router.get('/showenroll', verifyToken, showEnrolled);
-router.post('/resources/:courseId', upload.single('file'), resourceController); // course completion 
+router.get('/showenroll', verifyToken, showEnrolled); // course completion 
 
 router.post('/markvideoascomplete/:courseId/:videoId', verifyToken, markVideoAsComplete);
 router.get('/completedCourses', verifyToken, completedCourses); //Ranking and progress

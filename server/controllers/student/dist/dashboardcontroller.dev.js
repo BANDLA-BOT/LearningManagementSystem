@@ -388,7 +388,7 @@ var topRanks = function topRanks(req, res) {
 };
 
 var markVideoAsComplete = function markVideoAsComplete(req, res) {
-  var _req$params, courseId, videoId, userId, course, student, enrolledCourses, totalVideos, completedVideos;
+  var _req$params, courseId, videoId, userId, course, student, enrolledCourses, enrolledCourse, alreadyCompleted, courseCompletion, totalVideos, completedVideos;
 
   return regeneratorRuntime.async(function markVideoAsComplete$(_context7) {
     while (1) {
@@ -430,28 +430,54 @@ var markVideoAsComplete = function markVideoAsComplete(req, res) {
 
         case 13:
           enrolledCourses = student.enrolled;
-          console.log(enrolledCourses); // const enrolledCourse = student.enrolled.find(enroll => enroll.coursesAvailable.equals(courseId))
-          // console.log(enrolledCourse)
-          // if (!enrolledCourse) {
-          //   return res.status(404).json({ message: "Course not enrolled by the student" });
-          // }
-          // const alreadyCompleted = enrolledCourse.completedVideos.find(cv => cv.courseId.equals(courseId) && cv.videos.includes(videoId))
-          // if (alreadyCompleted) {
-          //   return res.json({ message: "Video already marked as complete" });
-          // }
-          // let courseCompletion = enrolledCourse.completedVideos.find( cv=> cv.courseId.equals(courseId))
-          // if(!courseCompletion){
-          //   courseCompletion = { courseId, videos:[videoId]}
-          //   enrolledCourse.completedVideos.push(courseCompletion)
-          // }
-          // else {
-          //   courseCompletion.videos.push(videoId);
-          // }
+          console.log(enrolledCourses);
+          enrolledCourse = student.enrolled.find(function (enroll) {
+            return enroll.coursesAvailable.equals(courseId);
+          });
+          console.log(enrolledCourse);
 
-          _context7.next = 17;
+          if (enrolledCourse) {
+            _context7.next = 19;
+            break;
+          }
+
+          return _context7.abrupt("return", res.status(404).json({
+            message: "Course not enrolled by the student"
+          }));
+
+        case 19:
+          alreadyCompleted = enrolledCourse.completedVideos.find(function (cv) {
+            return cv.courseId.equals(courseId) && cv.videos.includes(videoId);
+          });
+
+          if (!alreadyCompleted) {
+            _context7.next = 22;
+            break;
+          }
+
+          return _context7.abrupt("return", res.json({
+            message: "Video already marked as complete"
+          }));
+
+        case 22:
+          courseCompletion = enrolledCourse.completedVideos.find(function (cv) {
+            return cv.courseId.equals(courseId);
+          });
+
+          if (!courseCompletion) {
+            courseCompletion = {
+              courseId: courseId,
+              videos: [videoId]
+            };
+            enrolledCourse.completedVideos.push(courseCompletion);
+          } else {
+            courseCompletion.videos.push(videoId);
+          }
+
+          _context7.next = 26;
           return regeneratorRuntime.awrap(student.save());
 
-        case 17:
+        case 26:
           totalVideos = course.section.reduce(function (acc, section) {
             return acc + section.videos.length;
           }, 0);
@@ -462,28 +488,27 @@ var markVideoAsComplete = function markVideoAsComplete(req, res) {
             totalVideos: totalVideos,
             allCompleted: completedVideos === totalVideos
           });
-          _context7.next = 25;
+          _context7.next = 34;
           break;
 
-        case 22:
-          _context7.prev = 22;
+        case 31:
+          _context7.prev = 31;
           _context7.t0 = _context7["catch"](0);
           res.status(500).json({
             message: "Internal server error",
             error: _context7.t0.message
           });
 
-        case 25:
+        case 34:
         case "end":
           return _context7.stop();
       }
     }
-  }, null, null, [[0, 22]]);
+  }, null, null, [[0, 31]]);
 };
 
 var completedCourses = function completedCourses(req, res) {
-  var courseId, userId, student, enrolledCourse, _courseCompletion, course, totalVideos;
-
+  var courseId, userId, student, enrolledCourse, courseCompletion, course, totalVideos;
   return regeneratorRuntime.async(function completedCourses$(_context8) {
     while (1) {
       switch (_context8.prev = _context8.next) {
@@ -521,7 +546,7 @@ var completedCourses = function completedCourses(req, res) {
           }));
 
         case 11:
-          _courseCompletion = enrolledCourse.completedVideos.find(function (cv) {
+          courseCompletion = enrolledCourse.completedVideos.find(function (cv) {
             return cv.courseId.equals(courseId);
           }) || {
             videos: []
@@ -535,9 +560,9 @@ var completedCourses = function completedCourses(req, res) {
             return acc + section.videos.length;
           }, 0);
           res.json({
-            completedVideos: _courseCompletion.videos,
+            completedVideos: courseCompletion.videos,
             totalVideos: totalVideos,
-            allCompleted: _courseCompletion.videos.length === totalVideos
+            allCompleted: courseCompletion.videos.length === totalVideos
           });
           _context8.next = 22;
           break;
@@ -950,63 +975,22 @@ var ratingController = function ratingController(req, res) {
   }, null, null, [[6, 21]]);
 };
 
-var resourceController = function resourceController(req, res) {
-  var courseId, title, userId, filePath, course;
-  return regeneratorRuntime.async(function resourceController$(_context15) {
-    while (1) {
-      switch (_context15.prev = _context15.next) {
-        case 0:
-          _context15.prev = 0;
-          courseId = req.params.courseId;
-          title = req.body.title;
-          userId = req.user;
-          filePath = "".concat(req.file.destination, "/").concat(req.file.filename);
-          _context15.next = 7;
-          return regeneratorRuntime.awrap(courseModel.findById(courseId).populate('resources'));
-
-        case 7:
-          course = _context15.sent;
-          course.resources.push({
-            title: title,
-            url: filePath
-          });
-          _context15.next = 11;
-          return regeneratorRuntime.awrap(course.save());
-
-        case 11:
-          res.json(course);
-          _context15.next = 17;
-          break;
-
-        case 14:
-          _context15.prev = 14;
-          _context15.t0 = _context15["catch"](0);
-          res.json(_context15.t0.message);
-
-        case 17:
-        case "end":
-          return _context15.stop();
-      }
-    }
-  }, null, null, [[0, 14]]);
-};
-
 var askQuestion = function askQuestion(req, res) {
   var _req$params2, videoId, courseId, question, askedBy, course, discussion;
 
-  return regeneratorRuntime.async(function askQuestion$(_context16) {
+  return regeneratorRuntime.async(function askQuestion$(_context15) {
     while (1) {
-      switch (_context16.prev = _context16.next) {
+      switch (_context15.prev = _context15.next) {
         case 0:
           _req$params2 = req.params, videoId = _req$params2.videoId, courseId = _req$params2.courseId;
           question = req.body.question;
           askedBy = req.user.id;
-          _context16.prev = 3;
-          _context16.next = 6;
+          _context15.prev = 3;
+          _context15.next = 6;
           return regeneratorRuntime.awrap(courseModel.findById(courseId));
 
         case 6:
-          course = _context16.sent;
+          course = _context15.sent;
           discussion = course.discussions;
           discussion.push({
             videoId: videoId,
@@ -1014,63 +998,89 @@ var askQuestion = function askQuestion(req, res) {
             askedBy: askedBy,
             question: question
           });
-          _context16.next = 11;
+          _context15.next = 11;
           return regeneratorRuntime.awrap(course.save());
 
         case 11:
           res.json({
             message: "We have got your question, you will get answer back from our instructor"
           });
-          _context16.next = 17;
+          _context15.next = 17;
           break;
 
         case 14:
-          _context16.prev = 14;
-          _context16.t0 = _context16["catch"](3);
+          _context15.prev = 14;
+          _context15.t0 = _context15["catch"](3);
           res.status(500).json({
             message: "Internal server error",
-            error: _context16.t0.message
+            error: _context15.t0.message
           });
 
         case 17:
         case "end":
-          return _context16.stop();
+          return _context15.stop();
       }
     }
   }, null, null, [[3, 14]]);
 };
 
 var topDiscussions = function topDiscussions(req, res) {
-  var courseId, course, discussion;
-  return regeneratorRuntime.async(function topDiscussions$(_context17) {
+  var _req$params3, courseId, videoId, course, discussion, data;
+
+  return regeneratorRuntime.async(function topDiscussions$(_context16) {
     while (1) {
-      switch (_context17.prev = _context17.next) {
+      switch (_context16.prev = _context16.next) {
         case 0:
-          _context17.prev = 0;
-          courseId = req.params.courseId;
-          _context17.next = 4;
-          return regeneratorRuntime.awrap(courseModel.find({
-            _id: courseId
-          }).populate('discussions'));
+          _context16.prev = 0;
+          _req$params3 = req.params, courseId = _req$params3.courseId, videoId = _req$params3.videoId;
+          _context16.next = 4;
+          return regeneratorRuntime.awrap(courseModel.findById(courseId));
 
         case 4:
-          course = _context17.sent;
+          course = _context16.sent;
           discussion = course.discussions;
-          res.json(discussion);
-          _context17.next = 12;
+          data = [];
+          discussion.map(function (item) {
+            if (!item) {
+              return res.json({
+                Message: "There are discussions on this video"
+              });
+            }
+
+            if (item.videoId.toString() === videoId) {
+              console.log('Matched');
+              data.push({
+                question: item.question,
+                answer: item.answer || 'waiting for answer',
+                answeredBy: item.answeredBy || 'Instructor busy in Writing answer',
+                createdAt: item.createdAt
+              });
+              return data;
+            } else {
+              console.log("No");
+            }
+          });
+
+          if (data.length <= 10) {
+            res.json({
+              message: "Top ".concat(data.length, " discussions on this video"),
+              Data: data
+            });
+          }
+
+          _context16.next = 13;
           break;
 
-        case 9:
-          _context17.prev = 9;
-          _context17.t0 = _context17["catch"](0);
-          res.send(_context17.t0.message);
+        case 11:
+          _context16.prev = 11;
+          _context16.t0 = _context16["catch"](0);
 
-        case 12:
+        case 13:
         case "end":
-          return _context17.stop();
+          return _context16.stop();
       }
     }
-  }, null, null, [[0, 9]]);
+  }, null, null, [[0, 11]]);
 };
 
 module.exports = {
@@ -1078,7 +1088,6 @@ module.exports = {
   enrollCourse: enrollCourse,
   showEnrolled: showEnrolled,
   topRanks: topRanks,
-  resourceController: resourceController,
   completedCourses: completedCourses,
   progressController: progressController,
   courseProgress: courseProgress,

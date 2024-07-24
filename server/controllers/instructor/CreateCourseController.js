@@ -38,4 +38,19 @@ const uploadVideos = async (req,res)=>{
     }
 }
 
-module.exports = {createCourse, uploadVideos}
+const resourceController = async(req,res)=>{
+    try {
+        const { courseId } = req.params
+        const {title} = req.body
+        const userId = req.user
+        const filePath = `${req.file.destination}/${req.file.filename}`
+        const course = await courseModel.findById(courseId).populate('resources')
+        course.resources.push({title:title, url:filePath})
+        await course.save()
+      res.json(course)
+    } catch (error) {
+      res.json(error.message)
+    }
+  }
+
+module.exports = {createCourse, uploadVideos, resourceController}
