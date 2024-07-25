@@ -37,14 +37,13 @@ const uploadVideos = async (req,res)=>{
         res.status(500).json({ error: 'Error uploading video' });
     }
 }
-
 const resourceController = async(req,res)=>{
     try {
         const { courseId } = req.params
         const {title} = req.body
         const userId = req.user
         const filePath = `${req.file.destination}/${req.file.filename}`
-        const course = await courseModel.findById(courseId).populate('resources')
+        const course = await CourseModel.findById(courseId).populate('resources')
         course.resources.push({title:title, url:filePath})
         await course.save()
       res.json(course)

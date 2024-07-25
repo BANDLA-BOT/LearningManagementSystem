@@ -9,7 +9,7 @@ if(!fs.existsSync('/uploads')){
 }
 const storage = multer.diskStorage({
     destination:(req,file,cb)=>{
-        cb(null, '/uploads')
+        cb(null, 'uploads')
     },
     filename:(req,file,cb)=>{
         cb(null,`${Date.now()}-student-${file.originalname}`)
@@ -22,6 +22,4 @@ router.post('/register', upload.single('profile'), register);
 router.post('/login', login);
 router.post('/request-reset-password',resetPasswordLink)
 router.post('/reset-password/:token', resetPassword)
-
-
 module.exports = router 

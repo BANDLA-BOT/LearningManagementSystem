@@ -20,7 +20,7 @@ if (!fs.existsSync('/uploads')) {
 
 var storage = multer.diskStorage({
   destination: function destination(req, file, cb) {
-    cb(null, '/uploads');
+    cb(null, 'uploads');
   },
   filename: function filename(req, file, cb) {
     cb(null, "".concat(Date.now(), "-student-").concat(file.originalname));

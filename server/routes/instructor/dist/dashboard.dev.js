@@ -2,41 +2,33 @@
 
 var express = require('express');
 
-var _require = require('../../controllers/instructor/CreateCourseController.js'),
-    createCourse = _require.createCourse,
-    uploadVideos = _require.uploadVideos,
-    resourceController = _require.resourceController;
+var instructorTokenVerify = require('./../../utils/instructorTokenVerify.js');
+
+var questionsController = require('../../controllers/instructor/questionController.js');
+
+var _require = require('../../controllers/instructor/dashboardController.js'),
+    mentorsController = _require.mentorsController,
+    editInstructorProfile = _require.editInstructorProfile,
+    editPassword = _require.editPassword;
 
 var multer = require('multer');
 
-var cloudinary = require('cloudinary').v2;
+var router = express.Router(); //Multer for update profilePicture
 
-var router = express.Router(); //Multer
-
-var storage = multer.memoryStorage();
-var upload = multer({
-  storage: storage
-}); //Cloudinary
-
-cloudinary.config({
-  cloud_name: 'diqptwlqn',
-  api_key: process.env.API_KEY,
-  api_secret: process.env.API_SECRET
-}); //Multer to upload resources
-
-var resourceStorage = multer.diskStorage({
+var updateProfilePic = multer.diskStorage({
   destination: function destination(req, file, cb) {
-    cb(null, 'resources');
+    cb(null, 'instructorProfilesPics');
   },
   filename: function filename(req, file, cb) {
     cb(null, "".concat(Date.now(), "-").concat(file.originalname));
   }
 });
-var uploadResources = multer({
-  storage: resourceStorage
+var uploadProfilePic = multer({
+  storage: updateProfilePic
 });
-router.post('/create', createCourse);
-router.post('/uploadvideos/:courseId', upload.single('video'), uploadVideos);
-router.post('/resources/:courseId', upload.single('file'), resourceController);
+router.put('/editprofile', uploadProfilePic.single('updatedProfilePic'), instructorTokenVerify, editInstructorProfile);
+router.put('/editpassword', instructorTokenVerify, editPassword);
+router.get('/mentors', instructorTokenVerify, mentorsController);
+router.get('/discussions', instructorTokenVerify, questionsController);
 module.exports = router;
 //# sourceMappingURL=dashboard.dev.js.map

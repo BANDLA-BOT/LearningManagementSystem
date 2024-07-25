@@ -22,6 +22,9 @@ const instructor = new mongoose.Schema({
     },
     profilePic:{
         type:String
+    },
+    about:{
+        type:String
     }
 })
 

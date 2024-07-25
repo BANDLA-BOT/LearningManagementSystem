@@ -56,7 +56,8 @@ app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use(bodyParser.json());
 app.use('/uploads', express["static"]('uploads'));
-app.use('/resources', express["static"]('resources')); //student API's
+app.use('/resources', express["static"]('resources'));
+app.use('/instructorProfilesPicUpdate', express["static"]('instructorProfilesPicUpdate')); //student API's
 
 app.use("/api/student/auth", authRoutes);
 app.use("/api/student/dashboard", dashboardRoutes);
@@ -67,7 +68,7 @@ app.use("/api/admin/dashboard", dashboard);
 app.use('/api/admin/review', reviewRoute); //Instructor API's 
 
 app.use('/api/instructor/auth', authInstructor);
-app.use("/api/instructor/course", createCourseRoute);
+app.use("/api/instructor/dashboard", createCourseRoute);
 app.use('/api/instructor/discussion', discussions); //server
 
 app.listen(process.env.PORT, function () {

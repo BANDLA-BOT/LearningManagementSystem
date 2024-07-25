@@ -43,8 +43,6 @@ router.get('/sorting', sorting)
 //Ratings
 router.post('/rate/:courseId/rate', verifyToken, ratingController)
 
-
-
 //Ask question
 router.post('/ask/:courseId/:videoId', verifyToken, askQuestion)
 router.get('/topDiscuss/:courseId/:videoId', verifyToken,topDiscussions)

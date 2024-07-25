@@ -1,35 +1,28 @@
 const express = require('express');
-const {createCourse, uploadVideos, resourceController} = require('../../controllers/instructor/CreateCourseController.js');
-const multer = require('multer');
-const cloudinary = require('cloudinary').v2
+const instructorTokenVerify = require('./../../utils/instructorTokenVerify.js')
+const questionsController = require('../../controllers/instructor/questionController.js')
+const {mentorsController, editInstructorProfile, editPassword} = require('../../controllers/instructor/dashboardController.js')
+const multer = require('multer')
 const router = express.Router()
 
-//Multer
-const storage = multer.memoryStorage()
-const upload = multer({storage:storage})
 
-//Cloudinary
 
-cloudinary.config({
-    cloud_name:'diqptwlqn',
-    api_key:process.env.API_KEY,
-    api_secret:process.env.API_SECRET
+//Multer for update profilePicture
+const updateProfilePic = multer.diskStorage({
+  destination:(req,file,cb)=>{
+    cb(null, 'instructorProfilesPics')
+  },
+  filename:(req,file,cb)=>{
+    cb(null,`${Date.now()}-${file.originalname}`)
+}
+})
+const uploadProfilePic = multer({
+  storage:updateProfilePic
 })
 
-//Multer to upload resources
+router.put('/editprofile', uploadProfilePic.single('updatedProfilePic'),instructorTokenVerify, editInstructorProfile)
+router.put('/editpassword', instructorTokenVerify, editPassword)
+router.get('/mentors', instructorTokenVerify, mentorsController)
+router.get('/discussions', instructorTokenVerify, questionsController)
 
-const resourceStorage = multer.diskStorage({
-    destination:(req,file,cb)=>{
-      cb(null, 'resources')
-    },
-    filename:(req,file,cb)=>{
-      cb(null,`${Date.now()}-${file.originalname}`)
-  }
-  })
-  const uploadResources = multer({
-    storage:resourceStorage
-  })
-router.post('/create', createCourse)
-router.post('/uploadvideos/:courseId',upload.single('video'), uploadVideos)
-router.post('/resources/:courseId', upload.single('file'),resourceController)
 module.exports = router

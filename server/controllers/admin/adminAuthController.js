@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken');
 const adminModel = require('../../models/users/adminModel.js')
 const bcrypt = require('bcryptjs')
-
 const register = async(req, res)=>{
     const {firstname, lastname, email, password} = req.body
     try {
@@ -22,8 +21,6 @@ const register = async(req, res)=>{
         res.status(500).json({message:"Internal server error", error:error.message})
     }
 }
-
-
 const login = async(req,res)=>{
     const {email, password} = req.body
     try {
@@ -41,5 +38,4 @@ const login = async(req,res)=>{
         
     }
 }
-
 module.exports = {login, register}

@@ -10,7 +10,7 @@ var nodemailer = require('nodemailer'); //Register Controller
 
 
 var register = function register(req, res) {
-  var _req$body, email, firstname, lastname, password, imgPath, user, hashedPassword, newUser;
+  var _req$body, email, firstname, lastname, password, imgPath, user, salt, hashedPassword, newUser;
 
   return regeneratorRuntime.async(function register$(_context) {
     while (1) {
@@ -37,7 +37,8 @@ var register = function register(req, res) {
           }));
 
         case 8:
-          hashedPassword = bcrypt.hashSync(password, 10);
+          salt = 12;
+          hashedPassword = bcrypt.hashSync(password, salt);
           newUser = new Student({
             email: email,
             firstname: firstname,
@@ -45,32 +46,33 @@ var register = function register(req, res) {
             password: hashedPassword,
             profilepic: imgPath
           });
-          _context.next = 12;
+          _context.next = 13;
           return regeneratorRuntime.awrap(newUser.save());
 
-        case 12:
+        case 13:
           res.status(201).json({
             Message: "Student registered successfully",
             Student: newUser,
             register: true
           });
-          _context.next = 18;
+          _context.next = 20;
           break;
 
-        case 15:
-          _context.prev = 15;
+        case 16:
+          _context.prev = 16;
           _context.t0 = _context["catch"](0);
+          console.log(_context.t0);
           res.status(500).json({
             Message: "Internal server error",
             Error: _context.t0.message
           });
 
-        case 18:
+        case 20:
         case "end":
           return _context.stop();
       }
     }
-  }, null, null, [[0, 15]]);
+  }, null, null, [[0, 16]]);
 }; //Login Controller
 
 
@@ -185,7 +187,7 @@ var resetPasswordLink = function resetPasswordLink(req, res) {
             from: process.env.EMAIL_USER,
             to: email,
             subject: 'Password reset Link',
-            text: "Please use the following link to reset your password: http://localhost:8000/reset-password/".concat(resetToken)
+            text: "Please use the following link to reset your password: http://localhost:8000/api/student/auth/reset-password/".concat(resetToken)
           };
           transporter.sendMail(mailOptions, function (error, info) {
             if (error) {

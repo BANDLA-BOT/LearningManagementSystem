@@ -12,7 +12,7 @@ const deleteReview = async (req, res) => {
       });
       await course.save();
   
-      res.json(reviewDelete);
+      res.json(reviews);
     } catch (error) {
       res.json(error.message);
     }

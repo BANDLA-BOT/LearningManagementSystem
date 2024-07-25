@@ -142,7 +142,7 @@ var resourceController = function resourceController(req, res) {
           userId = req.user;
           filePath = "".concat(req.file.destination, "/").concat(req.file.filename);
           _context4.next = 7;
-          return regeneratorRuntime.awrap(courseModel.findById(courseId).populate('resources'));
+          return regeneratorRuntime.awrap(CourseModel.findById(courseId).populate('resources'));
 
         case 7:
           course = _context4.sent;

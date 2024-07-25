@@ -43,7 +43,7 @@ var deleteReview = function deleteReview(req, res) {
           return regeneratorRuntime.awrap(course.save());
 
         case 9:
-          res.json(reviewDelete);
+          res.json(reviews);
           _context2.next = 15;
           break;
 

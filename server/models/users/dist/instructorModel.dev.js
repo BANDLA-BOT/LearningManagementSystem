@@ -24,6 +24,9 @@ var instructor = new mongoose.Schema({
   },
   profilePic: {
     type: String
+  },
+  about: {
+    type: String
   }
 });
 var instructorModel = mongoose.model('instructor', instructor);

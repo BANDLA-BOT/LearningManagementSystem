@@ -12,8 +12,9 @@ const register = async (req, res) => {
     if (user) {
       return res.json({ message: "User already exists with the email ID" });
     }
-      
-    const hashedPassword = bcrypt.hashSync(password, 10)
+    const salt = 12
+   const hashedPassword = bcrypt.hashSync(password, salt)
+   
     const newUser = new Student({
       email,
       firstname,
@@ -26,6 +27,7 @@ const register = async (req, res) => {
       .status(201)
       .json({ Message: "Student registered successfully", Student: newUser , register:true});
   } catch (error) {
+    console.log(error)
     res
       .status(500)
       .json({ Message: "Internal server error", Error: error.message });
@@ -82,7 +84,7 @@ const resetPasswordLink = async (req, res) => {
     from:process.env.EMAIL_USER,
     to:email,
     subject:'Password reset Link',
-    text:`Please use the following link to reset your password: http://localhost:8000/reset-password/${resetToken}`
+    text:`Please use the following link to reset your password: http://localhost:8000/api/student/auth/reset-password/${resetToken}`
   }
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {

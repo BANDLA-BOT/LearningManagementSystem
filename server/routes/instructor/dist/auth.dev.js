@@ -6,9 +6,9 @@ var router = express.Router();
 
 var path = require('path');
 
-var fs = require('fs');
-
 var multer = require('multer');
+
+var fs = require('fs');
 
 var _require = require('../../controllers/instructor/authController.js'),
     registerController = _require.registerController,
