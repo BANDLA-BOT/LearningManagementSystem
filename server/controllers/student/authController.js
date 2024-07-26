@@ -37,7 +37,7 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log(email, password)
+    // console.log(email, password)
     const existUser = await Student.findOne({
       email: email,
     });

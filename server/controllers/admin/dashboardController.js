@@ -1,16 +1,26 @@
 const courseModel = require('../../models/course/courseModel.js')
 const Instructor = require('../../models/users/instructorModel.js')
 const student = require('../../models/users/studentModel.js')
+const cloudinary = require("cloudinary").v2;
+const nodemailer = require('nodemailer')
+const multer = require("multer");
 
+
+//Cloudinary for videos
+cloudinary.config({
+  cloud_name: "diqptwlqn",
+  api_key: process.env.API_KEY,
+  api_secret: process.env.API_SECRET,
+});
 const dashboardController = async(req,res)=>{
     try {
         const Students = await student.find()
         const Courses =  await courseModel.find()
-        const Instructor = await Instructor.find()
-        if(!Students || !Courses || !Instructor){
+        const instructor = await Instructor.find()
+        if(!Students || !Courses || !instructor){
             return res.status(404).json({message:"Error while fetching Data"})
         }
-        res.status(200).json({message:"Fetched Data", courses:Courses, students:Students, Instructor:Instructor})
+        res.status(200).json({message:"Fetched Data", courses:Courses, students:Students, Instructor:instructor})
     } catch (error) {
         res.status(500).json({message:"Internal server error", error:error.message})
     }
@@ -49,10 +59,34 @@ const createCourse = async (req,res)=>{
     try {
      const {title, price, description} = req.body
      const {instructorId} = req.params
-     const newCourse = await CourseModel.create({
+     const instructor = await Instructor.findById(instructorId)
+     const newCourse = await courseModel.create({
          title,price, description, instructor:instructorId
      })
-     res.json(newCourse)
+     const transporter = nodemailer.createTransport({
+      service:'gmail',
+      auth:{
+           user:process.env.EMAIL_USER,
+           pass:process.env.EMAIL_PASS
+          },
+      secure:true,
+     })
+     const mailOptions = {
+      from:process.env.EMAIL_USER,
+      to:instructor.email,
+      subject:"Task Added",
+      html:`You have assigned to a task
+        <b><p>Coursename:${title}</p></b>
+        <b><p>Price:${price}</p></b>
+        <b><p>Description:${description}</p></b>
+      `
+     }
+     transporter.sendMail(mailOptions, (error, info)=>{
+      if(error){
+        return res.json({Message:"Error while sending email", error:error.message})
+      }
+      res.json({Message:"Email sent successfully ", Status:`Task assigned succesfully to the ${instructor.email}`})
+     })
     } catch (error) {
      res.json(error.message)
     }
@@ -61,7 +95,7 @@ const createCourse = async (req,res)=>{
      try {
          const {courseId} = req.params
          const {title,videoTitle} = req.body
-         const course = await CourseModel.findById(courseId)
+         const course = await courseModel.findById(courseId)
          const section = course.section
          if(!req.file && !req.file.buffer){
              return res.status(400).json({ error: 'No file provided in the request' });
@@ -86,7 +120,7 @@ const createCourse = async (req,res)=>{
          const {title} = req.body
          const userId = req.user
          const filePath = `${req.file.destination}/${req.file.filename}`
-         const course = await CourseModel.findById(courseId).populate('resources')
+         const course = await courseModel.findById(courseId).populate('resources')
          course.resources.push({title:title, url:filePath})
          await course.save()
        res.json(course)

@@ -1,8 +1,9 @@
 "use strict";
 
-var Student = require('../../models/users/studentModel.js');
+var Student = require("../../models/users/studentModel.js");
 
-var courseModel = require('../../models/course/courseModel.js');
+var courseModel = require("../../models/course/courseModel.js"); //Dashboard
+
 
 var getProfile = function getProfile(req, res) {
   var id, student, courses;
@@ -10,24 +11,24 @@ var getProfile = function getProfile(req, res) {
     while (1) {
       switch (_context.prev = _context.next) {
         case 0:
-          id = req.user;
-          console.log(id);
-          _context.prev = 2;
-          _context.next = 5;
+          id = req.user; // console.log(id);
+
+          _context.prev = 1;
+          _context.next = 4;
           return regeneratorRuntime.awrap(Student.findById({
             _id: id.id
           }).select("-password"));
 
-        case 5:
+        case 4:
           student = _context.sent;
-          _context.next = 8;
+          _context.next = 7;
           return regeneratorRuntime.awrap(courseModel.find().limit(61));
 
-        case 8:
+        case 7:
           courses = _context.sent;
 
           if (student) {
-            _context.next = 11;
+            _context.next = 10;
             break;
           }
 
@@ -35,9 +36,9 @@ var getProfile = function getProfile(req, res) {
             message: "No student found "
           }));
 
-        case 11:
+        case 10:
           if (courses) {
-            _context.next = 13;
+            _context.next = 12;
             break;
           }
 
@@ -45,27 +46,30 @@ var getProfile = function getProfile(req, res) {
             message: "No courses available currently"
           }));
 
-        case 13:
+        case 12:
           res.json({
             message: "Students Profile",
             Profile: student,
             courses: courses,
-            status: true
+            porfileStatus: true
           });
-          console.log(student);
-          _context.next = 19;
+          _context.next = 18;
           break;
 
-        case 17:
-          _context.prev = 17;
-          _context.t0 = _context["catch"](2);
+        case 15:
+          _context.prev = 15;
+          _context.t0 = _context["catch"](1);
+          res.status(500).json({
+            Message: "Internal server error",
+            Error: _context.t0.message
+          });
 
-        case 19:
+        case 18:
         case "end":
           return _context.stop();
       }
     }
-  }, null, null, [[2, 17]]);
+  }, null, null, [[1, 15]]);
 };
 
 var editProfile = function editProfile(req, res) {
@@ -78,8 +82,7 @@ var editProfile = function editProfile(req, res) {
           _context2.prev = 0;
           _req$body = req.body, email = _req$body.email, firstname = _req$body.firstname, lastname = _req$body.lastname;
           userId = req.user.id;
-          console.log(userId);
-          _context2.next = 6;
+          _context2.next = 5;
           return regeneratorRuntime.awrap(Student.updateOne({
             _id: userId
           }, {
@@ -90,28 +93,28 @@ var editProfile = function editProfile(req, res) {
             }
           }));
 
-        case 6:
+        case 5:
           student = _context2.sent;
           res.status(200).json({
             message: "Profile updated successfuly"
           });
-          _context2.next = 13;
+          _context2.next = 12;
           break;
 
-        case 10:
-          _context2.prev = 10;
+        case 9:
+          _context2.prev = 9;
           _context2.t0 = _context2["catch"](0);
           res.status(500).json({
             message: "Internal server error",
             Error: _context2.t0.message
           });
 
-        case 13:
+        case 12:
         case "end":
           return _context2.stop();
       }
     }
-  }, null, null, [[0, 10]]);
+  }, null, null, [[0, 9]]);
 };
 
 var editPassword = function editPassword(req, res) {
@@ -288,7 +291,7 @@ var showEnrolled = function showEnrolled(req, res) {
           _context5.next = 4;
           return regeneratorRuntime.awrap(Student.findById({
             _id: userId.id
-          }).populate('enrolled.coursesAvailable'));
+          }).populate("enrolled.coursesAvailable"));
 
         case 4:
           student = _context5.sent;
@@ -414,7 +417,7 @@ var markVideoAsComplete = function markVideoAsComplete(req, res) {
 
         case 8:
           _context7.next = 10;
-          return regeneratorRuntime.awrap(Student.findById(userId).populate('enrolled.coursesAvailable'));
+          return regeneratorRuntime.awrap(Student.findById(userId).populate("enrolled.coursesAvailable"));
 
         case 10:
           student = _context7.sent;
@@ -517,7 +520,7 @@ var completedCourses = function completedCourses(req, res) {
           courseId = req.params.courseId;
           userId = req.user.id;
           _context8.next = 5;
-          return regeneratorRuntime.awrap(Student.findById(userId).populate('enrolled.coursesAvailable'));
+          return regeneratorRuntime.awrap(Student.findById(userId).populate("enrolled.coursesAvailable"));
 
         case 5:
           student = _context8.sent;
@@ -699,10 +702,10 @@ var courseProgress = function courseProgress(req, res) {
                         completedVideos: 1,
                         completedPercentage: {
                           $cond: [{
-                            $eq: ['$totalVideos', 0]
+                            $eq: ["$totalVideos", 0]
                           }, 0, {
                             $multiply: [{
-                              $divide: ['$completedVideos', '$totalVideos']
+                              $divide: ["$completedVideos", "$totalVideos"]
                             }, 100]
                           }]
                         }
@@ -744,7 +747,7 @@ var courseProgress = function courseProgress(req, res) {
       }
     }
   }, null, null, [[0, 13]]);
-}; //filtering Records 
+}; //filtering Records
 
 
 var filter = function filter(req, res) {
@@ -757,13 +760,13 @@ var filter = function filter(req, res) {
           query = req.query.f;
           console.log(query);
 
-          if (!(query.toLowerCase() === 'paid')) {
+          if (!(query.toLowerCase() === "paid")) {
             _context12.next = 10;
             break;
           }
 
           _context12.next = 6;
-          return regeneratorRuntime.awrap(courseModel.find().where('price').gt(0));
+          return regeneratorRuntime.awrap(courseModel.find().where("price").gt(0));
 
         case 6:
           paidCourses = _context12.sent;
@@ -773,13 +776,13 @@ var filter = function filter(req, res) {
           }));
 
         case 10:
-          if (!(query.toLowerCase() === 'free')) {
+          if (!(query.toLowerCase() === "free")) {
             _context12.next = 15;
             break;
           }
 
           _context12.next = 13;
-          return regeneratorRuntime.awrap(courseModel.find().where('price').eq(0));
+          return regeneratorRuntime.awrap(courseModel.find().where("price").eq(0));
 
         case 13:
           freeCourses = _context12.sent;
@@ -895,7 +898,8 @@ var sorting = function sorting(req, res) {
       }
     }
   }, null, null, [[0, 24]]);
-};
+}; //Rating controller
+
 
 var ratingController = function ratingController(req, res) {
   var courseId, rating, userId, course, existingRating;
@@ -913,7 +917,7 @@ var ratingController = function ratingController(req, res) {
             break;
           }
 
-          return _context14.abrupt("return", res.status(400).send('Invalid rating. Must be between 1 and 5'));
+          return _context14.abrupt("return", res.status(400).send("Invalid rating. Must be between 1 and 5"));
 
         case 6:
           _context14.prev = 6;
@@ -928,7 +932,7 @@ var ratingController = function ratingController(req, res) {
             break;
           }
 
-          return _context14.abrupt("return", res.status(404).json('Course not found.'));
+          return _context14.abrupt("return", res.status(404).json("Course not found."));
 
         case 12:
           existingRating = course.rating.find(function (r) {
@@ -973,7 +977,8 @@ var ratingController = function ratingController(req, res) {
       }
     }
   }, null, null, [[6, 21]]);
-};
+}; //Discussions[ ASK QUESTION ]
+
 
 var askQuestion = function askQuestion(req, res) {
   var _req$params2, videoId, courseId, question, askedBy, course, discussion;
@@ -1022,10 +1027,11 @@ var askQuestion = function askQuestion(req, res) {
       }
     }
   }, null, null, [[3, 14]]);
-};
+}; //Discussions List
+
 
 var topDiscussions = function topDiscussions(req, res) {
-  var _req$params3, courseId, videoId, course, discussion, data;
+  var _req$params3, courseId, videoId, course;
 
   return regeneratorRuntime.async(function topDiscussions$(_context16) {
     while (1) {
@@ -1034,53 +1040,57 @@ var topDiscussions = function topDiscussions(req, res) {
           _context16.prev = 0;
           _req$params3 = req.params, courseId = _req$params3.courseId, videoId = _req$params3.videoId;
           _context16.next = 4;
-          return regeneratorRuntime.awrap(courseModel.findById(courseId));
+          return regeneratorRuntime.awrap(courseModel.aggregate([{
+            $match: {
+              '_id': courseId
+            }
+          }]));
 
         case 4:
           course = _context16.sent;
-          discussion = course.discussions;
-          data = [];
-          discussion.map(function (item) {
-            if (!item) {
-              return res.json({
-                Message: "There are discussions on this video"
-              });
-            }
+          console.log(course); // const discussion = course.discussions;
+          // let data = [];
+          // discussion.map((item) => {
+          //   if (!item) {
+          //     return res.json({ Message: "There are discussions on this video" });
+          //   }
+          //   if (item.videoId.toString() === videoId) {
+          //     console.log("Matched");
+          //     data.push({
+          //       question: item.question,
+          //       answer: item.answer || "waiting for answer",
+          //       answeredBy: item.answeredBy || "Instructor busy in Writing answer",
+          //       createdAt: item.createdAt,
+          //     });
+          //     return data;
+          //   } else {
+          //     console.log("There are discussions on this video");
+          //   }
+          // });
+          // if (data.length <= 10) {
+          //   res.json({
+          //     message: `Top ${data.length} discussions on this video`,
+          //     Data: data,
+          //   });
+          // }
 
-            if (item.videoId.toString() === videoId) {
-              console.log('Matched');
-              data.push({
-                question: item.question,
-                answer: item.answer || 'waiting for answer',
-                answeredBy: item.answeredBy || 'Instructor busy in Writing answer',
-                createdAt: item.createdAt
-              });
-              return data;
-            } else {
-              console.log("No");
-            }
-          });
-
-          if (data.length <= 10) {
-            res.json({
-              message: "Top ".concat(data.length, " discussions on this video"),
-              Data: data
-            });
-          }
-
-          _context16.next = 13;
+          _context16.next = 11;
           break;
 
-        case 11:
-          _context16.prev = 11;
+        case 8:
+          _context16.prev = 8;
           _context16.t0 = _context16["catch"](0);
+          res.json({
+            Message: "Internal server error",
+            error: _context16.t0.message
+          });
 
-        case 13:
+        case 11:
         case "end":
           return _context16.stop();
       }
     }
-  }, null, null, [[0, 11]]);
+  }, null, null, [[0, 8]]);
 };
 
 module.exports = {

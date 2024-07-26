@@ -1,6 +1,10 @@
 const jwt = require('jsonwebtoken');
 const adminModel = require('../../models/users/adminModel.js')
 const bcrypt = require('bcryptjs')
+const nodemailer = require('nodemailer')
+
+
+
 const register = async(req, res)=>{
     const {firstname, lastname, email, password} = req.body
     try {
@@ -38,4 +42,50 @@ const login = async(req,res)=>{
         
     }
 }
-module.exports = {login, register}
+const sendOTP = async (req,res)=>{
+    try {
+        const { email } = req.body
+        const admin = await adminModel.findOne({email})
+        if(!admin){
+            return res.json({Message:"No user exists with this email ID"}).status(404)
+        }
+        const resetToken = jwt.sign({id:admin._id}, process.env.ADMIN_PASSWORD_RESET_KEY, {expiresIn:'10m'})
+        const transporter = nodemailer.createTestAccount({
+            service:'gmail',
+            auth:{
+                 user:process.env.EMAIL_USER,
+                 pass:process.env.EMAIL_PASS
+                },
+            secure:true,
+        })
+        const mailOptions = {
+            from:process.env.EMAIL_USER,
+            to:email,
+            subject:"Password reset link",
+            text:`Please use the following link to reset your password: http://localhost:8000/api/admin/auth/reset-password/${resetToken}`
+        }
+        transporter.sendEmail(mailOptions, (error, info)=>{
+            if(error){
+                return res.json ({Message:"Error while sending email"})
+            }
+            res.send('Password reset email sent to your email')
+        })
+
+    } catch (error) {
+        res.status(500).json({Message:"Internal server error", error:error.message})
+    }
+}
+const verifyAndUpdate = async(req,res)=>{
+    try {
+        const {token} = req.params
+        const { newPassword } = req.body
+        const decoded = jwt.verify(token, process.env.ADMIN_PASSWORD_RESET_KEY)
+        const userId = decoded.id
+        const hashedPassword = await bcrypt.hash(newPassword, 10)
+        await adminModel.findByIdAndUpdate(userId, {password:hashedPassword})
+        res.json({Message:"Password updated successfully"})
+    } catch (error) {
+        res.status(500).json({Message:"Internal server error", error:error.message})
+    }
+}
+module.exports = {login, register, verifyAndUpdate, sendOTP}

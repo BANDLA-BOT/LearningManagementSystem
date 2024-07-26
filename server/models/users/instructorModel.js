@@ -1,5 +1,25 @@
 const mongoose = require('mongoose');
 
+const qualificationSchema = mongoose.Schema({
+    degree:[
+        {
+            degreeName:{
+                type:String
+            },
+            year:{
+                type:Number
+            }
+        }
+    ],
+    skills:[
+        {
+            skillName:{
+                type:String,
+                enum:['Software engineering, Full stack development, Deveps, cloud engineering, data science, ']
+            }
+        }
+    ]
+})
 const instructor = new mongoose.Schema({
     firstname:{
         type:String,
@@ -25,7 +45,8 @@ const instructor = new mongoose.Schema({
     },
     about:{
         type:String
-    }
+    },
+    qualification:[]
 })
 
 const instructorModel = mongoose.model('instructor', instructor)

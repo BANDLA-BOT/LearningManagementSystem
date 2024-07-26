@@ -3,7 +3,7 @@ const router = express.Router()
 const path = require('path')
 const multer = require('multer')
 const fs = require('fs')
-const { registerController, loginController} = require('../../controllers/instructor/authController.js')
+const { registerController, loginController, instructorPasswordResetLink, instructorResetPassword} = require('../../controllers/instructor/authController.js')
 
 
 if(!fs.existsSync('/uploads')){
@@ -23,4 +23,7 @@ const upload = multer({
 
 router.post('/register', upload.single('profile'), registerController)
 router.post('/login', loginController)
+
+router.post('/reset-password-link', instructorPasswordResetLink)
+router.post('/reset-password/:token', instructorResetPassword)
 module.exports= router

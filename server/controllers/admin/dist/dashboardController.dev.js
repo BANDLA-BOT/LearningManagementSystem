@@ -6,9 +6,21 @@ var Instructor = require('../../models/users/instructorModel.js');
 
 var student = require('../../models/users/studentModel.js');
 
-var dashboardController = function dashboardController(req, res) {
-  var Students, Courses, _Instructor;
+var cloudinary = require("cloudinary").v2;
 
+var nodemailer = require('nodemailer');
+
+var multer = require("multer"); //Cloudinary for videos
+
+
+cloudinary.config({
+  cloud_name: "diqptwlqn",
+  api_key: process.env.API_KEY,
+  api_secret: process.env.API_SECRET
+});
+
+var dashboardController = function dashboardController(req, res) {
+  var Students, Courses, instructor;
   return regeneratorRuntime.async(function dashboardController$(_context) {
     while (1) {
       switch (_context.prev = _context.next) {
@@ -25,12 +37,12 @@ var dashboardController = function dashboardController(req, res) {
         case 6:
           Courses = _context.sent;
           _context.next = 9;
-          return regeneratorRuntime.awrap(_Instructor.find());
+          return regeneratorRuntime.awrap(Instructor.find());
 
         case 9:
-          _Instructor = _context.sent;
+          instructor = _context.sent;
 
-          if (!(!Students || !Courses || !_Instructor)) {
+          if (!(!Students || !Courses || !instructor)) {
             _context.next = 12;
             break;
           }
@@ -44,7 +56,7 @@ var dashboardController = function dashboardController(req, res) {
             message: "Fetched Data",
             courses: Courses,
             students: Students,
-            Instructor: _Instructor
+            Instructor: instructor
           });
           _context.next = 18;
           break;
@@ -166,7 +178,7 @@ var searchController = function searchController(req, res) {
 };
 
 var createCourse = function createCourse(req, res) {
-  var _req$body, title, price, description, instructorId, newCourse;
+  var _req$body, title, price, description, instructorId, instructor, newCourse, transporter, mailOptions;
 
   return regeneratorRuntime.async(function createCourse$(_context3) {
     while (1) {
@@ -176,30 +188,61 @@ var createCourse = function createCourse(req, res) {
           _req$body = req.body, title = _req$body.title, price = _req$body.price, description = _req$body.description;
           instructorId = req.params.instructorId;
           _context3.next = 5;
-          return regeneratorRuntime.awrap(CourseModel.create({
+          return regeneratorRuntime.awrap(Instructor.findById(instructorId));
+
+        case 5:
+          instructor = _context3.sent;
+          _context3.next = 8;
+          return regeneratorRuntime.awrap(courseModel.create({
             title: title,
             price: price,
             description: description,
             instructor: instructorId
           }));
 
-        case 5:
+        case 8:
           newCourse = _context3.sent;
-          res.json(newCourse);
-          _context3.next = 12;
+          transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+              user: process.env.EMAIL_USER,
+              pass: process.env.EMAIL_PASS
+            },
+            secure: true
+          });
+          mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: instructor.email,
+            subject: "Task Added",
+            html: "You have assigned to a task\n        <b><p>Coursename:".concat(title, "</p></b>\n        <b><p>Price:").concat(price, "</p></b>\n        <b><p>Description:").concat(description, "</p></b>\n      ")
+          };
+          transporter.sendMail(mailOptions, function (error, info) {
+            if (error) {
+              return res.json({
+                Message: "Error while sending email",
+                error: error.message
+              });
+            }
+
+            res.json({
+              Message: "Email sent successfully ",
+              Status: "Task assigned succesfully to the ".concat(instructor.email)
+            });
+          });
+          _context3.next = 17;
           break;
 
-        case 9:
-          _context3.prev = 9;
+        case 14:
+          _context3.prev = 14;
           _context3.t0 = _context3["catch"](0);
           res.json(_context3.t0.message);
 
-        case 12:
+        case 17:
         case "end":
           return _context3.stop();
       }
     }
-  }, null, null, [[0, 9]]);
+  }, null, null, [[0, 14]]);
 };
 
 var uploadVideos = function uploadVideos(req, res) {
@@ -213,7 +256,7 @@ var uploadVideos = function uploadVideos(req, res) {
           courseId = req.params.courseId;
           _req$body2 = req.body, title = _req$body2.title, videoTitle = _req$body2.videoTitle;
           _context5.next = 5;
-          return regeneratorRuntime.awrap(CourseModel.findById(courseId));
+          return regeneratorRuntime.awrap(courseModel.findById(courseId));
 
         case 5:
           course = _context5.sent;
@@ -301,7 +344,7 @@ var resourceController = function resourceController(req, res) {
           userId = req.user;
           filePath = "".concat(req.file.destination, "/").concat(req.file.filename);
           _context6.next = 7;
-          return regeneratorRuntime.awrap(CourseModel.findById(courseId).populate('resources'));
+          return regeneratorRuntime.awrap(courseModel.findById(courseId).populate('resources'));
 
         case 7:
           course = _context6.sent;

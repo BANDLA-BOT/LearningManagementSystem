@@ -84,18 +84,18 @@ var login = function login(req, res) {
       switch (_context2.prev = _context2.next) {
         case 0:
           _context2.prev = 0;
-          _req$body2 = req.body, email = _req$body2.email, password = _req$body2.password;
-          console.log(email, password);
-          _context2.next = 5;
+          _req$body2 = req.body, email = _req$body2.email, password = _req$body2.password; // console.log(email, password)
+
+          _context2.next = 4;
           return regeneratorRuntime.awrap(Student.findOne({
             email: email
           }));
 
-        case 5:
+        case 4:
           existUser = _context2.sent;
 
           if (existUser) {
-            _context2.next = 8;
+            _context2.next = 7;
             break;
           }
 
@@ -103,11 +103,11 @@ var login = function login(req, res) {
             message: "User doesn't exists"
           }));
 
-        case 8:
+        case 7:
           isValidPassword = bcrypt.compareSync(password, existUser.password);
 
           if (isValidPassword) {
-            _context2.next = 11;
+            _context2.next = 10;
             break;
           }
 
@@ -115,7 +115,7 @@ var login = function login(req, res) {
             message: "Password incorrect"
           }));
 
-        case 11:
+        case 10:
           token = jwt.sign({
             id: existUser._id
           }, process.env.JWT_SECRET_KEY, {
@@ -127,23 +127,23 @@ var login = function login(req, res) {
             Token: token,
             login: true
           });
-          _context2.next = 18;
+          _context2.next = 17;
           break;
 
-        case 15:
-          _context2.prev = 15;
+        case 14:
+          _context2.prev = 14;
           _context2.t0 = _context2["catch"](0);
           res.status(500).json({
             Message: "Internal server error",
             Error: _context2.t0.message
           });
 
-        case 18:
+        case 17:
         case "end":
           return _context2.stop();
       }
     }
-  }, null, null, [[0, 15]]);
+  }, null, null, [[0, 14]]);
 };
 
 var resetPasswordLink = function resetPasswordLink(req, res) {

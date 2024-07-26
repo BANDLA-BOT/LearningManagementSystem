@@ -6,6 +6,8 @@ var adminModel = require('../../models/users/adminModel.js');
 
 var bcrypt = require('bcryptjs');
 
+var nodemailer = require('nodemailer');
+
 var register = function register(req, res) {
   var _req$body, firstname, lastname, email, password, user, hashedPassword;
 
@@ -131,8 +133,127 @@ var login = function login(req, res) {
   }, null, null, [[1, 14]]);
 };
 
+var sendOTP = function sendOTP(req, res) {
+  var email, admin, resetToken, transporter, mailOptions;
+  return regeneratorRuntime.async(function sendOTP$(_context3) {
+    while (1) {
+      switch (_context3.prev = _context3.next) {
+        case 0:
+          _context3.prev = 0;
+          email = req.body.email;
+          _context3.next = 4;
+          return regeneratorRuntime.awrap(adminModel.findOne({
+            email: email
+          }));
+
+        case 4:
+          admin = _context3.sent;
+
+          if (admin) {
+            _context3.next = 7;
+            break;
+          }
+
+          return _context3.abrupt("return", res.json({
+            Message: "No user exists with this email ID"
+          }).status(404));
+
+        case 7:
+          resetToken = jwt.sign({
+            id: admin._id
+          }, process.env.ADMIN_PASSWORD_RESET_KEY, {
+            expiresIn: '10m'
+          });
+          transporter = nodemailer.createTestAccount({
+            service: 'gmail',
+            auth: {
+              user: process.env.EMAIL_USER,
+              pass: process.env.EMAIL_PASS
+            },
+            secure: true
+          });
+          mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: "Password reset link",
+            text: "Please use the following link to reset your password: http://localhost:8000/api/admin/auth/reset-password/".concat(resetToken)
+          };
+          transporter.sendEmail(mailOptions, function (error, info) {
+            if (error) {
+              return res.json({
+                Message: "Error while sending email"
+              });
+            }
+
+            res.send('Password reset email sent to your email');
+          });
+          _context3.next = 16;
+          break;
+
+        case 13:
+          _context3.prev = 13;
+          _context3.t0 = _context3["catch"](0);
+          res.status(500).json({
+            Message: "Internal server error",
+            error: _context3.t0.message
+          });
+
+        case 16:
+        case "end":
+          return _context3.stop();
+      }
+    }
+  }, null, null, [[0, 13]]);
+};
+
+var verifyAndUpdate = function verifyAndUpdate(req, res) {
+  var token, newPassword, decoded, userId, hashedPassword;
+  return regeneratorRuntime.async(function verifyAndUpdate$(_context4) {
+    while (1) {
+      switch (_context4.prev = _context4.next) {
+        case 0:
+          _context4.prev = 0;
+          token = req.params.token;
+          newPassword = req.body.newPassword;
+          decoded = jwt.verify(token, process.env.ADMIN_PASSWORD_RESET_KEY);
+          userId = decoded.id;
+          _context4.next = 7;
+          return regeneratorRuntime.awrap(bcrypt.hash(newPassword, 10));
+
+        case 7:
+          hashedPassword = _context4.sent;
+          _context4.next = 10;
+          return regeneratorRuntime.awrap(adminModel.findByIdAndUpdate(userId, {
+            password: hashedPassword
+          }));
+
+        case 10:
+          res.json({
+            Message: "Password updated successfully"
+          });
+          _context4.next = 16;
+          break;
+
+        case 13:
+          _context4.prev = 13;
+          _context4.t0 = _context4["catch"](0);
+          res.status(500).json({
+            Message: "Internal server error",
+            error: _context4.t0.message
+          });
+
+        case 16:
+        case "end":
+          return _context4.stop();
+      }
+    }
+  }, null, null, [[0, 13]]);
+};
+
 module.exports = {
   login: login,
-  register: register
+  register: register,
+  verifyAndUpdate: verifyAndUpdate,
+  sendOTP: sendOTP
 };
 //# sourceMappingURL=adminAuthController.dev.js.map

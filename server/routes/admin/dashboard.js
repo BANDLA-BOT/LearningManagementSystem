@@ -1,6 +1,5 @@
 const express = require("express");
 const multer = require("multer");
-const cloudinary = require("cloudinary").v2;
 const router = express.Router();
 const fs = require('fs')
 
@@ -67,12 +66,7 @@ const answerController = require("../../controllers/instructor/answerController.
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-//Cloudinary for videos
-cloudinary.config({
-  cloud_name: "diqptwlqn",
-  api_key: process.env.API_KEY,
-  api_secret: process.env.API_SECRET,
-});
+
 
 
 //Multer to upload resources

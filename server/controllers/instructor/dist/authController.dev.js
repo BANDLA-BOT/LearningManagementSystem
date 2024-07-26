@@ -6,6 +6,8 @@ var bcrypt = require('bcryptjs');
 
 var jwt = require('jsonwebtoken');
 
+var nodemailer = require('nodemailer');
+
 var registerController = function registerController(req, res) {
   var _req$body, firstname, lastname, email, password, imgPath, instructor, hashedPassword, newInstructor;
 
@@ -137,8 +139,125 @@ var loginController = function loginController(req, res) {
   }, null, null, [[0, 14]]);
 };
 
+var instructorPasswordResetLink = function instructorPasswordResetLink(req, res) {
+  var email, instructor, resetToken, transporter, mailOptions;
+  return regeneratorRuntime.async(function instructorPasswordResetLink$(_context3) {
+    while (1) {
+      switch (_context3.prev = _context3.next) {
+        case 0:
+          _context3.prev = 0;
+          email = req.body.email;
+          _context3.next = 4;
+          return regeneratorRuntime.awrap(Instructor.findOne({
+            email: email
+          }));
+
+        case 4:
+          instructor = _context3.sent;
+
+          if (student) {
+            _context3.next = 7;
+            break;
+          }
+
+          return _context3.abrupt("return", res.status(404).json({
+            Message: "User not found"
+          }));
+
+        case 7:
+          resetToken = jwt.sign({
+            id: instructor._id
+          }, process.env.JWT_INSTRUCTOR_PASSWORD_RESET_KEY, {
+            expiresIn: '10m'
+          });
+          transporter = nodemailer.createTestAccount({
+            service: 'gmail',
+            auth: {
+              user: process.env.EMAIL_USER,
+              pass: process.env.EMAIL_PASS
+            },
+            secure: true
+          });
+          mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: 'Password reset link',
+            text: "Please use the following link to reset your password: http://localhost:8000/api/instructor/auth/reset-password/".concat(resetToken)
+          };
+          transporter.sendEmail(mailOptions, function (error, info) {
+            if (error) {
+              return res.status(500).send('Error while sending email');
+            }
+
+            res.send('Password reset email sent');
+          });
+          _context3.next = 16;
+          break;
+
+        case 13:
+          _context3.prev = 13;
+          _context3.t0 = _context3["catch"](0);
+          res.status(500).json({
+            Message: "Internal server error",
+            Error: _context3.t0.message
+          });
+
+        case 16:
+        case "end":
+          return _context3.stop();
+      }
+    }
+  }, null, null, [[0, 13]]);
+};
+
+var instructorResetPassword = function instructorResetPassword(req, res) {
+  var token, newPassword, decoded, userId, hashedPassword;
+  return regeneratorRuntime.async(function instructorResetPassword$(_context4) {
+    while (1) {
+      switch (_context4.prev = _context4.next) {
+        case 0:
+          _context4.prev = 0;
+          token = req.params.token;
+          newPassword = req.body.newPassword;
+          decoded = jwt.verify(token, process.env.JWT_INSTRUCTOR_PASSWORD_RESET_KEY);
+          userId = decoded.id;
+          _context4.next = 7;
+          return regeneratorRuntime.awrap(bcrypt.hash(newPassword, 10));
+
+        case 7:
+          hashedPassword = _context4.sent;
+          _context4.next = 10;
+          return regeneratorRuntime.awrap(Instructor.findByIdAndUpdate(userId, {
+            password: hashedPassword
+          }));
+
+        case 10:
+          res.json({
+            Message: "Password updated successfully"
+          });
+          _context4.next = 16;
+          break;
+
+        case 13:
+          _context4.prev = 13;
+          _context4.t0 = _context4["catch"](0);
+          res.status(500).json({
+            Message: "Internal server error",
+            error: _context4.t0.message
+          });
+
+        case 16:
+        case "end":
+          return _context4.stop();
+      }
+    }
+  }, null, null, [[0, 13]]);
+};
+
 module.exports = {
   registerController: registerController,
-  loginController: loginController
+  loginController: loginController,
+  instructorPasswordResetLink: instructorPasswordResetLink,
+  instructorResetPassword: instructorResetPassword
 };
 //# sourceMappingURL=authController.dev.js.map

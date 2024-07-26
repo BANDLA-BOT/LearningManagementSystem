@@ -4,8 +4,6 @@ var express = require("express");
 
 var multer = require("multer");
 
-var cloudinary = require("cloudinary").v2;
-
 var router = express.Router();
 
 var fs = require('fs'); //JWT DECODED TOKENS
@@ -65,12 +63,6 @@ var answerController = require("../../controllers/instructor/answerController.js
 var storage = multer.memoryStorage();
 var upload = multer({
   storage: storage
-}); //Cloudinary for videos
-
-cloudinary.config({
-  cloud_name: "diqptwlqn",
-  api_key: process.env.API_KEY,
-  api_secret: process.env.API_SECRET
 }); //Multer to upload resources
 
 var resourceStorage = multer.diskStorage({
