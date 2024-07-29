@@ -2,7 +2,9 @@
 
 var Student = require("../../models/users/studentModel.js");
 
-var courseModel = require("../../models/course/courseModel.js"); //Dashboard
+var courseModel = require("../../models/course/courseModel.js");
+
+var adminModel = require("../../models/users/adminModel.js"); //Dashboard
 
 
 var getProfile = function getProfile(req, res) {
@@ -191,7 +193,7 @@ var editPassword = function editPassword(req, res) {
 };
 
 var enrollCourse = function enrollCourse(req, res) {
-  var courseId, userId, course, student, Course, available;
+  var courseId, userId, course, admin, student, Course, available;
   return regeneratorRuntime.async(function enrollCourse$(_context4) {
     while (1) {
       switch (_context4.prev = _context4.next) {
@@ -206,16 +208,21 @@ var enrollCourse = function enrollCourse(req, res) {
         case 4:
           course = _context4.sent;
           _context4.next = 7;
+          return regeneratorRuntime.awrap(adminModel.findOne());
+
+        case 7:
+          admin = _context4.sent;
+          _context4.next = 10;
           return regeneratorRuntime.awrap(Student.findById({
             _id: userId.id
           }));
 
-        case 7:
+        case 10:
           student = _context4.sent;
-          _context4.prev = 8;
+          _context4.prev = 11;
 
           if (student) {
-            _context4.next = 11;
+            _context4.next = 14;
             break;
           }
 
@@ -223,9 +230,9 @@ var enrollCourse = function enrollCourse(req, res) {
             message: "Student not found"
           }));
 
-        case 11:
+        case 14:
           if (course) {
-            _context4.next = 13;
+            _context4.next = 16;
             break;
           }
 
@@ -233,14 +240,14 @@ var enrollCourse = function enrollCourse(req, res) {
             message: "Course not found"
           }));
 
-        case 13:
+        case 16:
           Course = student.enrolled;
           available = Course.some(function (course) {
             return course.coursesAvailable.equals(courseId);
           });
 
           if (!available) {
-            _context4.next = 17;
+            _context4.next = 20;
             break;
           }
 
@@ -248,36 +255,41 @@ var enrollCourse = function enrollCourse(req, res) {
             Message: "You have already enrolled this course"
           }));
 
-        case 17:
-          student.enrolled.push({
-            coursesAvailable: course._id,
-            isComplete: false
-          });
-          _context4.next = 20;
-          return regeneratorRuntime.awrap(student.save());
-
         case 20:
-          res.status(200).json({
-            Message: "Course enrolled successfuly",
-            Student: student
+          // student.enrolled.push({
+          //   coursesAvailable: course._id,
+          //   isComplete: false,
+          // });
+          // await student.save();
+          admin.courseRequests.push({
+            courseId: course._id,
+            studentId: student._id,
+            paid: true
           });
-          _context4.next = 26;
-          break;
+          _context4.next = 23;
+          return regeneratorRuntime.awrap(admin.save());
 
         case 23:
-          _context4.prev = 23;
-          _context4.t0 = _context4["catch"](8);
+          res.status(200).json({
+            Message: "Request sent to the Admin, check your EnrolledList after now"
+          });
+          _context4.next = 29;
+          break;
+
+        case 26:
+          _context4.prev = 26;
+          _context4.t0 = _context4["catch"](11);
           res.status(500).json({
             message: "Internal server error",
             Error: _context4.t0.message
           });
 
-        case 26:
+        case 29:
         case "end":
           return _context4.stop();
       }
     }
-  }, null, null, [[8, 23]]);
+  }, null, null, [[11, 26]]);
 };
 
 var showEnrolled = function showEnrolled(req, res) {

@@ -24,6 +24,26 @@ const adminSchema = new mongoose.Schema({
     type: String,
     default: "",
   },
+  courseRequests:[
+    {
+      courseId:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:'course'
+      },
+      studentId:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"student"
+      },
+      paid:{
+        type:Boolean,
+        default:false
+      },
+      accept:{
+        type:Boolean,
+        default:false
+      }
+    }
+  ]
 },{timestamps:true});
 
 const adminModel = mongoose.model("admin", adminSchema);

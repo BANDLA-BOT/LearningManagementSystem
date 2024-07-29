@@ -1,5 +1,6 @@
 const Student = require("../../models/users/studentModel.js");
 const courseModel = require("../../models/course/courseModel.js");
+const adminModel = require("../../models/users/adminModel.js");
 
 //Dashboard
 const getProfile = async (req, res) => {
@@ -68,10 +69,12 @@ const editPassword = async (req, res) => {
       .json({ message: "Internal server error", Error: error.message });
   }
 };
+
 const enrollCourse = async (req, res) => {
   const { courseId } = req.params;
   const userId = req.user;
   const course = await courseModel.findById({ _id: courseId });
+  const admin = await adminModel.findOne()
   const student = await Student.findById({ _id: userId.id });
   try {
     if (!student) {
@@ -87,20 +90,27 @@ const enrollCourse = async (req, res) => {
     if (available) {
       return res.json({ Message: "You have already enrolled this course" });
     }
-    student.enrolled.push({
-      coursesAvailable: course._id,
-      isComplete: false,
-    });
-    await student.save();
+    // student.enrolled.push({
+    //   coursesAvailable: course._id,
+    //   isComplete: false,
+    // });
+    // await student.save();
+    admin.courseRequests.push({
+      courseId:course._id,
+      studentId:student._id,
+      paid:true
+    })
+    await admin.save()
     res
       .status(200)
-      .json({ Message: "Course enrolled successfuly", Student: student });
+      .json({ Message: "Request sent to the Admin, check your EnrolledList after now",});
   } catch (error) {
     res
       .status(500)
       .json({ message: "Internal server error", Error: error.message });
   }
 };
+
 const showEnrolled = async (req, res) => {
   const userId = req.user;
   try {

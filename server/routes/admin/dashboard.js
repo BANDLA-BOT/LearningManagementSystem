@@ -17,6 +17,7 @@ const {
   createCourse,
   resourceController,
   uploadVideos,
+  acceptCourseRequest
 } = require("../../controllers/admin/dashboardController.js");
 
 //Student imports
@@ -121,6 +122,7 @@ router.get("/search", adminTokenDecode, searchController);
 router.post("/create/:instructorId", adminTokenDecode, createCourse);
 router.post("/uploadvideos/:courseId",upload.single("video"),adminTokenDecode,uploadVideos);
 router.post("/resources/:courseId",uploadResources.single("file"),adminTokenDecode,resourceController);
+router.put('/acceptcourserequest/:requestId', adminTokenDecode, acceptCourseRequest)
 
 
 //student Access
@@ -146,7 +148,7 @@ router.get("/student/topDiscuss/:courseId/:videoId",verifyToken,topDiscussions);
 
 
 //Instructor Access
-router.post('/instructor/register', upload.single('profile'), adminTokenDecode, registerController)
+router.post('/instructor/register', InstructorUploads.single('profile'), adminTokenDecode, registerController)
 router.post('/instructor/login', adminTokenDecode, loginController)
 router.put('/instructor/editprofile', uploadProfilePic.single('updatedProfilePic'),instructorTokenVerify, editInstructorProfile)
 router.put('/instructor/editpassword', instructorTokenVerify, editPassword)

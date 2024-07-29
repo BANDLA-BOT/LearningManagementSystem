@@ -4,14 +4,19 @@ const student = require('../../models/users/studentModel.js')
 const cloudinary = require("cloudinary").v2;
 const nodemailer = require('nodemailer')
 const multer = require("multer");
+const adminModel = require('../../models/users/adminModel.js');
+const studentModel = require('../../models/users/studentModel.js');
 
 
 //Cloudinary for videos
+
 cloudinary.config({
   cloud_name: "diqptwlqn",
   api_key: process.env.API_KEY,
   api_secret: process.env.API_SECRET,
 });
+
+
 const dashboardController = async(req,res)=>{
     try {
         const Students = await student.find()
@@ -90,7 +95,7 @@ const createCourse = async (req,res)=>{
     } catch (error) {
      res.json(error.message)
     }
- }
+}
  const uploadVideos = async (req,res)=>{
      try {
          const {courseId} = req.params
@@ -113,7 +118,7 @@ const createCourse = async (req,res)=>{
          console.error('Error uploading video:', error);
          res.status(500).json({ error: 'Error uploading video' });
      }
- }
+}
  const resourceController = async(req,res)=>{
      try {
          const { courseId } = req.params
@@ -127,5 +132,34 @@ const createCourse = async (req,res)=>{
      } catch (error) {
        res.json(error.message)
      }
-   }
-module.exports = {dashboardController, searchController, createCourse, uploadVideos, resourceController}
+}
+
+const acceptCourseRequest = async(req,res)=>{
+  try {
+    const { requestId } = req.params
+    const { studentId } = req.body
+    const Admin = await adminModel.findOne().populate('courseRequests')
+    const Student = await student.findById({_id:studentId}).populate('enrolled')
+    const enrolledList = Student.enrolled 
+    // console.log(Student)
+    if(!Student){
+      return res.status(404).json({Message:"No student found with this ID"})
+    }
+    const requests = Admin.courseRequests
+    const Accept = requests.id(requestId)
+    if(!Accept.paid){
+      return res.status(400).json({Message:"User did not Paid for the course"})
+    }
+    Accept.accept = true
+    enrolledList.push({
+      coursesAvailable:Accept.courseId
+    })
+    await Student.save()
+    await Admin.save()
+    res.status(200).json({Message:"Course confirmed"})
+
+  } catch (error) {
+    res.status(500).json({Message:"Internal server error", error:error.message})
+  }
+}
+module.exports = {dashboardController, searchController, createCourse, uploadVideos, resourceController, acceptCourseRequest}

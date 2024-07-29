@@ -21,7 +21,8 @@ var _require = require("../../controllers/admin/dashboardController.js"),
     searchController = _require.searchController,
     createCourse = _require.createCourse,
     resourceController = _require.resourceController,
-    uploadVideos = _require.uploadVideos; //Student imports
+    uploadVideos = _require.uploadVideos,
+    acceptCourseRequest = _require.acceptCourseRequest; //Student imports
 
 
 var _require2 = require("../../controllers/student/dashboardcontroller.js"),
@@ -109,7 +110,8 @@ router.get("/", adminTokenDecode, dashboardController);
 router.get("/search", adminTokenDecode, searchController);
 router.post("/create/:instructorId", adminTokenDecode, createCourse);
 router.post("/uploadvideos/:courseId", upload.single("video"), adminTokenDecode, uploadVideos);
-router.post("/resources/:courseId", uploadResources.single("file"), adminTokenDecode, resourceController); //student Access
+router.post("/resources/:courseId", uploadResources.single("file"), adminTokenDecode, resourceController);
+router.put('/acceptcourserequest/:requestId', adminTokenDecode, acceptCourseRequest); //student Access
 
 router.post('/student/register', upload.single('profile'), adminTokenDecode, register);
 router.post('/student/request-reset-password', adminTokenDecode, resetPasswordLink);
@@ -130,7 +132,7 @@ router.post("/student/rate/:courseId/rate", verifyToken, ratingController);
 router.post("/student/ask/:courseId/:videoId", verifyToken, askQuestion);
 router.get("/student/topDiscuss/:courseId/:videoId", verifyToken, topDiscussions); //Instructor Access
 
-router.post('/instructor/register', upload.single('profile'), adminTokenDecode, registerController);
+router.post('/instructor/register', InstructorUploads.single('profile'), adminTokenDecode, registerController);
 router.post('/instructor/login', adminTokenDecode, loginController);
 router.put('/instructor/editprofile', uploadProfilePic.single('updatedProfilePic'), instructorTokenVerify, editInstructorProfile);
 router.put('/instructor/editpassword', instructorTokenVerify, editPassword);

@@ -117,13 +117,14 @@ var login = function login(req, res) {
 
         case 10:
           token = jwt.sign({
-            id: existUser._id
+            id: existUser._id,
+            user: existUser.email
           }, process.env.JWT_SECRET_KEY, {
-            expiresIn: "15d"
+            expiresIn: "2w"
           });
           res.status(200).json({
             message: "Student logged in successfully",
-            student: existUser,
+            user: existUser,
             Token: token,
             login: true
           });

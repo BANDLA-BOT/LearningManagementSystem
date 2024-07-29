@@ -10,7 +10,11 @@ var cloudinary = require("cloudinary").v2;
 
 var nodemailer = require('nodemailer');
 
-var multer = require("multer"); //Cloudinary for videos
+var multer = require("multer");
+
+var adminModel = require('../../models/users/adminModel.js');
+
+var studentModel = require('../../models/users/studentModel.js'); //Cloudinary for videos
 
 
 cloudinary.config({
@@ -373,11 +377,92 @@ var resourceController = function resourceController(req, res) {
   }, null, null, [[0, 14]]);
 };
 
+var acceptCourseRequest = function acceptCourseRequest(req, res) {
+  var requestId, studentId, Admin, Student, enrolledList, requests, Accept;
+  return regeneratorRuntime.async(function acceptCourseRequest$(_context7) {
+    while (1) {
+      switch (_context7.prev = _context7.next) {
+        case 0:
+          _context7.prev = 0;
+          requestId = req.params.requestId;
+          studentId = req.body.studentId;
+          _context7.next = 5;
+          return regeneratorRuntime.awrap(adminModel.findOne().populate('courseRequests'));
+
+        case 5:
+          Admin = _context7.sent;
+          _context7.next = 8;
+          return regeneratorRuntime.awrap(student.findById({
+            _id: studentId
+          }).populate('enrolled'));
+
+        case 8:
+          Student = _context7.sent;
+          enrolledList = Student.enrolled; // console.log(Student)
+
+          if (Student) {
+            _context7.next = 12;
+            break;
+          }
+
+          return _context7.abrupt("return", res.status(404).json({
+            Message: "No student found with this ID"
+          }));
+
+        case 12:
+          requests = Admin.courseRequests;
+          Accept = requests.id(requestId);
+
+          if (Accept.paid) {
+            _context7.next = 16;
+            break;
+          }
+
+          return _context7.abrupt("return", res.status(400).json({
+            Message: "User did not Paid for the course"
+          }));
+
+        case 16:
+          Accept.accept = true;
+          enrolledList.push({
+            coursesAvailable: Accept.courseId
+          });
+          _context7.next = 20;
+          return regeneratorRuntime.awrap(Student.save());
+
+        case 20:
+          _context7.next = 22;
+          return regeneratorRuntime.awrap(Admin.save());
+
+        case 22:
+          res.status(200).json({
+            Message: "Course confirmed"
+          });
+          _context7.next = 28;
+          break;
+
+        case 25:
+          _context7.prev = 25;
+          _context7.t0 = _context7["catch"](0);
+          res.status(500).json({
+            Message: "Internal server error",
+            error: _context7.t0.message
+          });
+
+        case 28:
+        case "end":
+          return _context7.stop();
+      }
+    }
+  }, null, null, [[0, 25]]);
+};
+
 module.exports = {
   dashboardController: dashboardController,
   searchController: searchController,
   createCourse: createCourse,
   uploadVideos: uploadVideos,
-  resourceController: resourceController
+  resourceController: resourceController,
+  acceptCourseRequest: acceptCourseRequest
 };
 //# sourceMappingURL=dashboardController.dev.js.map
