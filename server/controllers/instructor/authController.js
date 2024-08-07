@@ -2,10 +2,16 @@ const Instructor = require('../../models/users/instructorModel.js')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const nodemailer = require('nodemailer')
+
 const registerController = async(req,res)=>{
     try {
     const { firstname, lastname, email, password } = req.body
+  
+    if (!req.file) {
+        return res.status(400).json({ message: "Profile picture is required" });
+    }
     const imgPath = `${req.file.destination}/${req.file.filename}`
+
     const instructor = await Instructor.findOne({email:email})
     if(instructor){
         return res.status(400).json ({message:"User already exist with same Email ID"})

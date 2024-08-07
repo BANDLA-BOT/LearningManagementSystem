@@ -17,7 +17,7 @@ cloudinary.config({
 });
 
 
-const dashboardController = async(req,res)=>{
+const  dashboardController = async(req,res)=>{
     try {
         const Students = await student.find()
         const Courses =  await courseModel.find()
@@ -133,7 +133,6 @@ const createCourse = async (req,res)=>{
        res.json(error.message)
      }
 }
-
 const acceptCourseRequest = async(req,res)=>{
   try {
     const { requestId } = req.params

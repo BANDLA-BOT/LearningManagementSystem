@@ -5,7 +5,6 @@ const adminModel = require("../../models/users/adminModel.js");
 //Dashboard
 const getProfile = async (req, res) => {
   const id = req.user;
-  // console.log(id);
   try {
     const student = await Student.findById({ _id: id.id }).select("-password");
     const courses = await courseModel.find().limit(61);
@@ -69,12 +68,11 @@ const editPassword = async (req, res) => {
       .json({ message: "Internal server error", Error: error.message });
   }
 };
-
 const enrollCourse = async (req, res) => {
   const { courseId } = req.params;
   const userId = req.user;
   const course = await courseModel.findById({ _id: courseId });
-  const admin = await adminModel.findOne()
+  const admin = await adminModel.findOne();
   const student = await Student.findById({ _id: userId.id });
   try {
     if (!student) {
@@ -90,27 +88,24 @@ const enrollCourse = async (req, res) => {
     if (available) {
       return res.json({ Message: "You have already enrolled this course" });
     }
-    // student.enrolled.push({
-    //   coursesAvailable: course._id,
-    //   isComplete: false,
-    // });
-    // await student.save();
     admin.courseRequests.push({
-      courseId:course._id,
-      studentId:student._id,
-      paid:true
-    })
-    await admin.save()
+      courseId: course._id,
+      studentId: student._id,
+      paid: true,
+    });
+    await admin.save();
     res
       .status(200)
-      .json({ Message: "Request sent to the Admin, check your EnrolledList after now",});
+      .json({
+        Message:
+          "Request sent to the Admin, check your EnrolledList after sometime",
+      });
   } catch (error) {
     res
       .status(500)
       .json({ message: "Internal server error", Error: error.message });
   }
 };
-
 const showEnrolled = async (req, res) => {
   const userId = req.user;
   try {
@@ -452,44 +447,93 @@ const askQuestion = async (req, res) => {
 const topDiscussions = async (req, res) => {
   try {
     const { courseId, videoId } = req.params;
-    const course = await courseModel.aggregate([
-      {
-        $match:{'_id':courseId},
-      },
-      
-    ]);
-    console.log(course)
-    // const discussion = course.discussions;
+    const course = await courseModel.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+    const discussions = course.discussions.filter(
+      (d) => d.videoId.toString() === videoId
+    );
+    if (discussions.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No discussions found for this video" });
+    }
+    const questionCounts = {};
 
-    // let data = [];
-    // discussion.map((item) => {
-    //   if (!item) {
-    //     return res.json({ Message: "There are discussions on this video" });
-    //   }
-    //   if (item.videoId.toString() === videoId) {
-    //     console.log("Matched");
-    //     data.push({
-    //       question: item.question,
-    //       answer: item.answer || "waiting for answer",
-    //       answeredBy: item.answeredBy || "Instructor busy in Writing answer",
-    //       createdAt: item.createdAt,
-    //     });
-    //     return data;
-    //   } else {
-    //     console.log("There are discussions on this video");
-    //   }
-    // });
-    // if (data.length <= 10) {
-    //   res.json({
-    //     message: `Top ${data.length} discussions on this video`,
-    //     Data: data,
-    //   });
-    // }
+    discussions.forEach((d) => {
+      if (d.question) {
+        questionCounts[d.question] = (questionCounts[d.question] || 0) + 1;
+      }
+    });
+
+    const sortedQuestions = Object.entries(questionCounts)
+      .map(([question, count]) => ({
+        question,
+        count,
+        discussions: discussions.filter((d) => d.question === question),
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+
+    const data = sortedQuestions.map((q) => {
+      const firstDiscussion = q.discussions[0];
+      return {
+        question: q.question,
+        answer: firstDiscussion.answer || "Waiting for answer",
+        answeredBy:
+          firstDiscussion.answeredBy || "Instructor busy in writing answer",
+        createdAt: firstDiscussion.createdAt,
+        count: q.count,
+      };
+    });
+    res.json({
+      message: `Top ${data.length} discussions on this video`,
+      data,
+    });
   } catch (error) {
-    res.json({ Message: "Internal server error", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Inernal server error", Error: error.message });
   }
-};
 
+  // try {
+  //   const { courseId, videoId } = req.params;
+  //   const course = await courseModel.aggregate([
+  //     {
+  //       $match:{_id:courseId},
+  //     },
+  //     {$unwind:'$discussions'},
+  //     {$match:{  "discussions.videoId": videoId}},
+  //     {
+  //       $group:{
+  //         _id:'$discussions.question',
+  //         count:{ $sum:1 },
+  //         question:{$first:'$discussions.question'},
+  //         answer: { $first: "$discussions.answer" },
+  //         answeredBy: { $first: "$discussions.answeredBy" },
+  //         createdAt: { $first: "$discussions.createdAt" },
+  //       }
+  //     },
+  //     { $sort :{ count:-1}},
+  //     { $limit:10}
+  //   ]);
+  //   console.log(course)
+  //   const data = course.map(item => ({
+  //     question: item.question,
+  //     answer: item.answer || "Waiting for answer",
+  //     answeredBy: item.answeredBy || "Instructor busy in writing answer",
+  //     createdAt: item.createdAt,
+  //     count: item.count
+  //   }));
+  //   res.json({
+  //     message: `Top ${data.length} discussions on this video`,
+  //     data
+  //   });
+  // } catch (error) {
+  //   res.json({ Message: "Internal server error", error: error.message });
+  // }
+};
 
 module.exports = {
   getProfile,

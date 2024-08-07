@@ -1,5 +1,13 @@
 "use strict";
 
+function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
+
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
+
+function _iterableToArrayLimit(arr, i) { if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) { return; } var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+
 var Student = require("../../models/users/studentModel.js");
 
 var courseModel = require("../../models/course/courseModel.js");
@@ -13,8 +21,7 @@ var getProfile = function getProfile(req, res) {
     while (1) {
       switch (_context.prev = _context.next) {
         case 0:
-          id = req.user; // console.log(id);
-
+          id = req.user;
           _context.prev = 1;
           _context.next = 4;
           return regeneratorRuntime.awrap(Student.findById({
@@ -256,11 +263,6 @@ var enrollCourse = function enrollCourse(req, res) {
           }));
 
         case 20:
-          // student.enrolled.push({
-          //   coursesAvailable: course._id,
-          //   isComplete: false,
-          // });
-          // await student.save();
           admin.courseRequests.push({
             courseId: course._id,
             studentId: student._id,
@@ -271,7 +273,7 @@ var enrollCourse = function enrollCourse(req, res) {
 
         case 23:
           res.status(200).json({
-            Message: "Request sent to the Admin, check your EnrolledList after now"
+            Message: "Request sent to the Admin, check your EnrolledList after sometime"
           });
           _context4.next = 29;
           break;
@@ -1043,7 +1045,7 @@ var askQuestion = function askQuestion(req, res) {
 
 
 var topDiscussions = function topDiscussions(req, res) {
-  var _req$params3, courseId, videoId, course;
+  var _req$params3, courseId, videoId, course, discussions, questionCounts, sortedQuestions, data;
 
   return regeneratorRuntime.async(function topDiscussions$(_context16) {
     while (1) {
@@ -1052,57 +1054,87 @@ var topDiscussions = function topDiscussions(req, res) {
           _context16.prev = 0;
           _req$params3 = req.params, courseId = _req$params3.courseId, videoId = _req$params3.videoId;
           _context16.next = 4;
-          return regeneratorRuntime.awrap(courseModel.aggregate([{
-            $match: {
-              '_id': courseId
-            }
-          }]));
+          return regeneratorRuntime.awrap(courseModel.findById(courseId));
 
         case 4:
           course = _context16.sent;
-          console.log(course); // const discussion = course.discussions;
-          // let data = [];
-          // discussion.map((item) => {
-          //   if (!item) {
-          //     return res.json({ Message: "There are discussions on this video" });
-          //   }
-          //   if (item.videoId.toString() === videoId) {
-          //     console.log("Matched");
-          //     data.push({
-          //       question: item.question,
-          //       answer: item.answer || "waiting for answer",
-          //       answeredBy: item.answeredBy || "Instructor busy in Writing answer",
-          //       createdAt: item.createdAt,
-          //     });
-          //     return data;
-          //   } else {
-          //     console.log("There are discussions on this video");
-          //   }
-          // });
-          // if (data.length <= 10) {
-          //   res.json({
-          //     message: `Top ${data.length} discussions on this video`,
-          //     Data: data,
-          //   });
-          // }
 
-          _context16.next = 11;
-          break;
+          if (course) {
+            _context16.next = 7;
+            break;
+          }
 
-        case 8:
-          _context16.prev = 8;
-          _context16.t0 = _context16["catch"](0);
-          res.json({
-            Message: "Internal server error",
-            error: _context16.t0.message
+          return _context16.abrupt("return", res.status(404).json({
+            message: "Course not found"
+          }));
+
+        case 7:
+          discussions = course.discussions.filter(function (d) {
+            return d.videoId.toString() === videoId;
           });
 
-        case 11:
+          if (!(discussions.length === 0)) {
+            _context16.next = 10;
+            break;
+          }
+
+          return _context16.abrupt("return", res.status(404).json({
+            message: "No discussions found for this video"
+          }));
+
+        case 10:
+          questionCounts = {};
+          discussions.forEach(function (d) {
+            if (d.question) {
+              questionCounts[d.question] = (questionCounts[d.question] || 0) + 1;
+            }
+          });
+          sortedQuestions = Object.entries(questionCounts).map(function (_ref) {
+            var _ref2 = _slicedToArray(_ref, 2),
+                question = _ref2[0],
+                count = _ref2[1];
+
+            return {
+              question: question,
+              count: count,
+              discussions: discussions.filter(function (d) {
+                return d.question === question;
+              })
+            };
+          }).sort(function (a, b) {
+            return b.count - a.count;
+          }).slice(0, 10);
+          data = sortedQuestions.map(function (q) {
+            var firstDiscussion = q.discussions[0];
+            return {
+              question: q.question,
+              answer: firstDiscussion.answer || "Waiting for answer",
+              answeredBy: firstDiscussion.answeredBy || "Instructor busy in writing answer",
+              createdAt: firstDiscussion.createdAt,
+              count: q.count
+            };
+          });
+          res.json({
+            message: "Top ".concat(data.length, " discussions on this video"),
+            data: data
+          });
+          _context16.next = 20;
+          break;
+
+        case 17:
+          _context16.prev = 17;
+          _context16.t0 = _context16["catch"](0);
+          res.status(500).json({
+            message: "Inernal server error",
+            Error: _context16.t0.message
+          });
+
+        case 20:
         case "end":
           return _context16.stop();
       }
     }
-  }, null, null, [[0, 8]]);
+  }, null, null, [[0, 17]]);
 };
 
 module.exports = {

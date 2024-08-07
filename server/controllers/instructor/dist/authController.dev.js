@@ -17,17 +17,28 @@ var registerController = function registerController(req, res) {
         case 0:
           _context.prev = 0;
           _req$body = req.body, firstname = _req$body.firstname, lastname = _req$body.lastname, email = _req$body.email, password = _req$body.password;
+
+          if (req.file) {
+            _context.next = 4;
+            break;
+          }
+
+          return _context.abrupt("return", res.status(400).json({
+            message: "Profile picture is required"
+          }));
+
+        case 4:
           imgPath = "".concat(req.file.destination, "/").concat(req.file.filename);
-          _context.next = 5;
+          _context.next = 7;
           return regeneratorRuntime.awrap(Instructor.findOne({
             email: email
           }));
 
-        case 5:
+        case 7:
           instructor = _context.sent;
 
           if (!instructor) {
-            _context.next = 8;
+            _context.next = 10;
             break;
           }
 
@@ -35,7 +46,7 @@ var registerController = function registerController(req, res) {
             message: "User already exist with same Email ID"
           }));
 
-        case 8:
+        case 10:
           hashedPassword = bcrypt.hashSync(password, 10);
           newInstructor = new Instructor({
             firstname: firstname,
@@ -44,30 +55,30 @@ var registerController = function registerController(req, res) {
             password: hashedPassword,
             profilePic: imgPath
           });
-          _context.next = 12;
+          _context.next = 14;
           return regeneratorRuntime.awrap(newInstructor.save());
 
-        case 12:
+        case 14:
           res.status(201).json({
             message: "Registered successfully"
           });
-          _context.next = 18;
+          _context.next = 20;
           break;
 
-        case 15:
-          _context.prev = 15;
+        case 17:
+          _context.prev = 17;
           _context.t0 = _context["catch"](0);
           res.status(500).json({
             message: "Internal server error",
             Error: _context.t0.message
           });
 
-        case 18:
+        case 20:
         case "end":
           return _context.stop();
       }
     }
-  }, null, null, [[0, 15]]);
+  }, null, null, [[0, 17]]);
 };
 
 var loginController = function loginController(req, res) {

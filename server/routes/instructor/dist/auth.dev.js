@@ -31,7 +31,7 @@ var storage = multer.diskStorage({
 var upload = multer({
   storage: storage
 });
-router.post('/register', upload.single('profile'), registerController);
+router.post('/register', upload.single('profilePic'), registerController);
 router.post('/login', loginController);
 router.post('/reset-password-link', instructorPasswordResetLink);
 router.post('/reset-password/:token', instructorResetPassword);
